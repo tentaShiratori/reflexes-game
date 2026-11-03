@@ -30,7 +30,6 @@ If you prefer not to use Tailwind CSS:
 3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
 4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
 
-
 ## Deploy to Cloudflare Workers
 
 This project uses the Cloudflare Vite plugin (configured in `vite.config.ts`) and `wrangler.jsonc`:
@@ -43,25 +42,34 @@ For production env vars, run `wrangler secret put MY_VAR` for each secret listed
 
 KV, D1, R2, and Durable Object bindings are configured in `wrangler.jsonc` — see https://developers.cloudflare.com/workers/wrangler/configuration/.
 
+## T3Env + Valibot
 
-## T3Env
-
-- You can use T3Env to add type safety to your environment variables.
-- Add Environment variables to the `src/env.mjs` file.
-- Use the environment variables in your code.
+- Environment variables are validated in `src/env.ts` with Valibot via `@t3-oss/env-core`.
 
 ### Usage
 
 ```ts
-import { env } from "#/env";
+import { env } from '#/env'
 
-console.log(env.VITE_APP_TITLE);
+console.log(env.VITE_APP_TITLE)
 ```
 
+## Tooling
 
+| Script                           | Command                |
+| -------------------------------- | ---------------------- |
+| Dev server                       | `pnpm dev`             |
+| Unit tests                       | `pnpm test run <file>` |
+| Coverage (threshold 80%)         | `pnpm test:coverage`   |
+| E2E                              | `pnpm test:e2e`        |
+| Format                           | `pnpm fmt`             |
+| Lint                             | `pnpm lint`            |
+| Typecheck (`tsc`)                | `pnpm typecheck`       |
+| Format + lint + type-aware check | `pnpm check`           |
+| Dead code (fallow)               | `pnpm dead-code`       |
+| Quality gate                     | `pnpm quality`         |
 
-
-
+Git `pre-push` は lefthook 経由で dead-code / fmt / lint / typecheck / test を並列実行します（`pnpm prepare` または `lefthook install`）。Cursor の agent `stop` hook も同じチェックを実行し、失敗時は修正を促す follow-up を送ります。GitHub Actions（`.github/workflows/ci.yml`）でも同内容を matrix で並列実行します。
 
 ## Routing
 
@@ -80,7 +88,7 @@ Now that you have two routes you can use a `Link` component to navigate between 
 To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
 
 ```tsx
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 ```
 
 Then anywhere in your JSX you can use it like so:
@@ -148,11 +156,11 @@ const getServerTime = createServerFn({
 // Use in a component
 function MyComponent() {
   const [time, setTime] = useState('')
-  
+
   useEffect(() => {
     getServerTime().then(setTime)
   }, [])
-  
+
   return <div>Server time: {time}</div>
 }
 ```
@@ -204,8 +212,6 @@ function PeopleComponent() {
 ```
 
 Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-
 
 # Learn More
 

@@ -4,8 +4,8 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
 
-export const Route = createRootRoute({
-  head: () => ({
+export function rootHead() {
+  return {
     meta: [
       {
         charSet: 'utf-8',
@@ -24,11 +24,15 @@ export const Route = createRootRoute({
         href: appCss,
       },
     ],
-  }),
+  }
+}
+
+export const Route = createRootRoute({
+  head: rootHead,
   shellComponent: RootDocument,
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+export function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>

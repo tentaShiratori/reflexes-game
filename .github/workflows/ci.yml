@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: ${{ matrix.check }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [dead-code, fmt, lint, typecheck, test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: dead-code
+        if: matrix.check == 'dead-code'
+        run: pnpm dead-code
+
+      - name: fmt
+        if: matrix.check == 'fmt'
+        run: pnpm exec vp fmt --check
+
+      - name: lint
+        if: matrix.check == 'lint'
+        run: pnpm lint
+
+      - name: typecheck
+        if: matrix.check == 'typecheck'
+        run: pnpm typecheck
+
+      - name: test
+        if: matrix.check == 'test'
+        run: pnpm test

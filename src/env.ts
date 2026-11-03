@@ -1,9 +1,9 @@
 import { createEnv } from '@t3-oss/env-core'
-import { z } from 'zod'
+import * as v from 'valibot'
 
 export const env = createEnv({
   server: {
-    SERVER_URL: z.url().optional(),
+    SERVER_URL: v.optional(v.pipe(v.string(), v.url())),
   },
 
   /**
@@ -13,7 +13,7 @@ export const env = createEnv({
   clientPrefix: 'VITE_',
 
   client: {
-    VITE_APP_TITLE: z.string().min(1).optional(),
+    VITE_APP_TITLE: v.optional(v.pipe(v.string(), v.minLength(1))),
   },
 
   /**
@@ -24,13 +24,14 @@ export const env = createEnv({
 
   /**
    * By default, this library will feed the environment variables directly to
-   * the Zod validator.
+   * the Valibot validator.
    *
    * This means that if you have an empty string for a value that is supposed
-   * to be a number (e.g. `PORT=` in a ".env" file), Zod will incorrectly flag
-   * it as a type mismatch violation. Additionally, if you have an empty string
-   * for a value that is supposed to be a string with a default value (e.g.
-   * `DOMAIN=` in an ".env" file), the default value will never be applied.
+   * to be a number (e.g. `PORT=` in a ".env" file), Valibot will incorrectly
+   * flag it as a type mismatch violation. Additionally, if you have an empty
+   * string for a value that is supposed to be a string with a default value
+   * (e.g. `DOMAIN=` in an ".env" file), the default value will never be
+   * applied.
    *
    * In order to solve these issues, we recommend that all new projects
    * explicitly specify this option as true.
