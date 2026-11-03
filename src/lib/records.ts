@@ -1,4 +1,4 @@
-import { TOTAL_ROUNDS } from './janken'
+import { TOTAL_ROUNDS } from './reflex'
 
 export type SessionRecord = {
   accuracy: number
@@ -14,7 +14,10 @@ export type RecordsStore = {
   bestAverageResponseMs: number | null
 }
 
-export const RECORDS_STORAGE_KEY = 'reflexes-janken-records'
+export const JANKEN_RECORDS_STORAGE_KEY = 'reflexes-janken-records'
+export const ACCHI_RECORDS_STORAGE_KEY = 'reflexes-acchi-records'
+/** @deprecated Prefer JANKEN_RECORDS_STORAGE_KEY */
+export const RECORDS_STORAGE_KEY = JANKEN_RECORDS_STORAGE_KEY
 const MAX_SESSIONS = 50
 
 export function createEmptyRecords(): RecordsStore {
@@ -65,8 +68,11 @@ export function parseRecords(raw: string | null): RecordsStore {
   }
 }
 
-export function loadRecords(storage: Storage = localStorage): RecordsStore {
-  return parseRecords(storage.getItem(RECORDS_STORAGE_KEY))
+export function loadRecords(
+  storage: Storage = localStorage,
+  key: string = JANKEN_RECORDS_STORAGE_KEY,
+): RecordsStore {
+  return parseRecords(storage.getItem(key))
 }
 
 export function saveSession(
@@ -78,8 +84,9 @@ export function saveSession(
     playedAt?: string
   },
   storage: Storage = localStorage,
+  key: string = JANKEN_RECORDS_STORAGE_KEY,
 ): RecordsStore {
-  const current = loadRecords(storage)
+  const current = loadRecords(storage, key)
   const session: SessionRecord = {
     accuracy: input.accuracy,
     averageResponseMs: input.averageResponseMs,
@@ -101,7 +108,7 @@ export function saveSession(
     bestAverageResponseMs,
   }
 
-  storage.setItem(RECORDS_STORAGE_KEY, JSON.stringify(next))
+  storage.setItem(key, JSON.stringify(next))
   return next
 }
 

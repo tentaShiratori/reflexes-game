@@ -7,6 +7,7 @@ import {
 } from '#/lib/janken'
 import { formatAccuracy, formatResponseMs } from '#/lib/records'
 import { useJankenGame } from '#/lib/useJankenGame'
+import { Link } from '@tanstack/react-router'
 
 export function JankenGame() {
   const { state, startGame, answer, resetToIdle } = useJankenGame()
@@ -55,9 +56,14 @@ export function JankenGame() {
               </div>
             </dl>
 
-            <button type="button" className="primary-button" onClick={startGame}>
-              スタート
-            </button>
+            <div className="button-row">
+              <button type="button" className="primary-button" onClick={startGame}>
+                スタート
+              </button>
+              <Link to="/" className="ghost-button link-button">
+                ゲーム一覧
+              </Link>
+            </div>
           </section>
         ) : null}
 
@@ -147,6 +153,9 @@ export function JankenGame() {
               <button type="button" className="ghost-button" onClick={resetToIdle}>
                 トップへ
               </button>
+              <Link to="/" className="ghost-button link-button">
+                ゲーム一覧
+              </Link>
             </div>
           </section>
         ) : null}

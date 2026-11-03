@@ -1,3 +1,5 @@
+import { TOTAL_ROUNDS, pickRandom, randomDelayMs, summarizeResults } from './reflex'
+
 export type Hand = 'rock' | 'scissors' | 'paper'
 export type Instruction = 'lose' | 'win' | 'draw'
 
@@ -30,9 +32,7 @@ const BEATEN_BY: Record<Hand, Hand> = {
   paper: 'scissors',
 }
 
-export const TOTAL_ROUNDS = 10
-const MIN_DELAY_MS = 1000
-const MAX_DELAY_MS = 3000
+export { TOTAL_ROUNDS, pickRandom, randomDelayMs, summarizeResults }
 
 export function getCorrectHand(systemHand: Hand, instruction: Instruction): Hand {
   switch (instruction) {
@@ -45,31 +45,10 @@ export function getCorrectHand(systemHand: Hand, instruction: Instruction): Hand
   }
 }
 
-export function pickRandom<T>(items: readonly T[]): T {
-  const index = Math.floor(Math.random() * items.length)
-  return items[index]!
-}
-
-export function randomDelayMs(minMs: number = MIN_DELAY_MS, maxMs: number = MAX_DELAY_MS): number {
-  return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs
-}
-
 export type RoundResult = {
   instruction: Instruction
   systemHand: Hand
   userHand: Hand
   correct: boolean
   responseMs: number
-}
-
-export function summarizeResults(results: RoundResult[]) {
-  const correctCount = results.filter((result) => result.correct).length
-  const totalRounds = results.length
-  const accuracy = totalRounds === 0 ? 0 : correctCount / totalRounds
-  const averageResponseMs =
-    totalRounds === 0
-      ? 0
-      : Math.round(results.reduce((sum, result) => sum + result.responseMs, 0) / totalRounds)
-
-  return { correctCount, totalRounds, accuracy, averageResponseMs }
 }

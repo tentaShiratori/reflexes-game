@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test'
 import {
+  ACCHI_RECORDS_STORAGE_KEY,
   RECORDS_STORAGE_KEY,
   createEmptyRecords,
   formatAccuracy,
@@ -128,5 +129,36 @@ describe('formatters', () => {
   it('formats accuracy and response speed for display', () => {
     expect(formatAccuracy(0.85)).toBe('85%')
     expect(formatResponseMs(1234)).toBe('1.23秒')
+  })
+})
+
+describe('per-game storage keys', () => {
+  it('keeps janken and acchi records separate', () => {
+    const storage = createMemoryStorage()
+
+    saveSession(
+      {
+        accuracy: 0.7,
+        averageResponseMs: 500,
+        correctCount: 7,
+        playedAt: '2026-01-01T00:00:00.000Z',
+      },
+      storage,
+      RECORDS_STORAGE_KEY,
+    )
+
+    saveSession(
+      {
+        accuracy: 0.9,
+        averageResponseMs: 300,
+        correctCount: 9,
+        playedAt: '2026-01-02T00:00:00.000Z',
+      },
+      storage,
+      ACCHI_RECORDS_STORAGE_KEY,
+    )
+
+    expect(loadRecords(storage, RECORDS_STORAGE_KEY).bestAccuracy).toBe(0.7)
+    expect(loadRecords(storage, ACCHI_RECORDS_STORAGE_KEY).bestAccuracy).toBe(0.9)
   })
 })

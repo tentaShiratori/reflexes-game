@@ -11,7 +11,7 @@ import {
   type Instruction,
   type RoundResult,
 } from './janken'
-import { loadRecords, saveSession, type RecordsStore } from './records'
+import { JANKEN_RECORDS_STORAGE_KEY, loadRecords, saveSession, type RecordsStore } from './records'
 
 type GamePhase = 'idle' | 'waiting' | 'answering' | 'feedback' | 'result'
 
@@ -49,7 +49,11 @@ function createIdleState(records: RecordsStore): GameState {
 
 export function useJankenGame() {
   const [state, setState] = useState<GameState>(() =>
-    createIdleState(typeof window === 'undefined' ? emptyRecords() : loadRecords()),
+    createIdleState(
+      typeof window === 'undefined'
+        ? emptyRecords()
+        : loadRecords(localStorage, JANKEN_RECORDS_STORAGE_KEY),
+    ),
   )
   const phaseRef = useRef<GamePhase>(state.phase)
   const resultsRef = useRef<RoundResult[]>([])
@@ -74,7 +78,10 @@ export function useJankenGame() {
   }, [state.phase])
 
   useEffect(() => {
-    setState((current) => ({ ...current, records: loadRecords() }))
+    setState((current) => ({
+      ...current,
+      records: loadRecords(localStorage, JANKEN_RECORDS_STORAGE_KEY),
+    }))
     return clearTimers
   }, [clearTimers])
 
@@ -147,12 +154,16 @@ export function useJankenGame() {
       feedbackTimerRef.current = setTimeout(() => {
         if (nextResults.length >= TOTAL_ROUNDS) {
           const summary = summarizeResults(nextResults)
-          const records = saveSession({
-            accuracy: summary.accuracy,
-            averageResponseMs: summary.averageResponseMs,
-            correctCount: summary.correctCount,
-            totalRounds: summary.totalRounds,
-          })
+          const records = saveSession(
+            {
+              accuracy: summary.accuracy,
+              averageResponseMs: summary.averageResponseMs,
+              correctCount: summary.correctCount,
+              totalRounds: summary.totalRounds,
+            },
+            localStorage,
+            JANKEN_RECORDS_STORAGE_KEY,
+          )
 
           phaseRef.current = 'result'
           setState((current) => ({

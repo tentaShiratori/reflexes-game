@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AcchiRouteImport } from './routes/acchi'
+import { Route as JankenRouteImport } from './routes/janken'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AcchiRoute = AcchiRouteImport.update({
+  id: '/acchi',
+  path: '/acchi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JankenRoute = JankenRouteImport.update({
+  id: '/janken',
+  path: '/janken',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/acchi': typeof AcchiRoute
+  '/janken': typeof JankenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/acchi': typeof AcchiRoute
+  '/janken': typeof JankenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/acchi': typeof AcchiRoute
+  '/janken': typeof JankenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/acchi' | '/janken'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/acchi' | '/janken'
+  id: '__root__' | '/' | '/acchi' | '/janken'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcchiRoute: typeof AcchiRoute
+  JankenRoute: typeof JankenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/acchi': {
+      id: '/acchi'
+      path: '/acchi'
+      fullPath: '/acchi'
+      preLoaderRoute: typeof AcchiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/janken': {
+      id: '/janken'
+      path: '/janken'
+      fullPath: '/janken'
+      preLoaderRoute: typeof JankenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcchiRoute: AcchiRoute,
+  JankenRoute: JankenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

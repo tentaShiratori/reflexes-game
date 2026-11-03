@@ -3,6 +3,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { JankenGame } from './JankenGame'
 import { RECORDS_STORAGE_KEY } from '#/lib/records'
 
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    children,
+    to,
+    className,
+  }: {
+    children: React.ReactNode
+    to: string
+    className?: string
+  }) => (
+    <a href={to} className={className}>
+      {children}
+    </a>
+  ),
+}))
+
 afterEach(() => {
   cleanup()
   localStorage.clear()

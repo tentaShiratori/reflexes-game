@@ -15,11 +15,11 @@ export function rootHead() {
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: '後だしじゃんけん | Reflex Drill',
+        title: 'Reflex Drill',
       },
       {
         name: 'description',
-        content: '指示に合わせて後出しの手を素早く選ぶ、反射神経トレーニングゲーム。',
+        content: '後だしじゃんけん・あっち向いてホイで反射神経を鍛えるトレーニング集。',
       },
     ],
     links: [
