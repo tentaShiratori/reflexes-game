@@ -1,21 +1,20 @@
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vite-plus/test'
-import { Home } from './index'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
+
+vi.mock('#/components/JankenGame', () => ({
+  JankenGame: () => <div>後だしじゃんけんゲーム</div>,
+}))
+
+const { Home } = await import('./index')
 
 afterEach(() => {
   cleanup()
 })
 
 describe('Home', () => {
-  it('renders the welcome heading', () => {
+  it('renders the janken game', () => {
     render(<Home />)
 
-    expect(screen.getByRole('heading', { name: 'Welcome to TanStack Start' })).toBeInTheDocument()
-  })
-
-  it('points editors at the index route file', () => {
-    render(<Home />)
-
-    expect(screen.getByText('src/routes/index.tsx')).toBeInTheDocument()
+    expect(screen.getByText('後だしじゃんけんゲーム')).toBeInTheDocument()
   })
 })
