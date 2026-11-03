@@ -2,21 +2,7 @@ import { atomWithStorage } from 'jotai/utils'
 import * as v from 'valibot'
 import { TOTAL_ROUNDS } from './reflex'
 
-export type SessionRecord = {
-  accuracy: number
-  averageResponseMs: number
-  correctCount: number
-  totalRounds: number
-  playedAt: string
-}
-
-export type RecordsStore = {
-  sessions: SessionRecord[]
-  bestAccuracy: number
-  bestAverageResponseMs: number | null
-}
-
-export const JANKEN_RECORDS_STORAGE_KEY = 'reflexes-janken-records'
+export const RECORDS_STORAGE_KEY = 'reflexes-janken-records'
 export const ACCHI_RECORDS_STORAGE_KEY = 'reflexes-acchi-records'
 const MAX_SESSIONS = 50
 
@@ -28,11 +14,26 @@ const SessionRecordSchema = v.object({
   playedAt: v.string(),
 })
 
-const LooseRecordsSchema = v.object({
-  sessions: v.optional(v.array(v.unknown())),
-  bestAccuracy: v.optional(v.number()),
-  bestAverageResponseMs: v.optional(v.nullable(v.number())),
+const RecordsStoreSchema = v.object({
+  sessions: v.pipe(
+    v.array(v.unknown()),
+    v.transform((items) =>
+      items.flatMap((item) => {
+        const parsed = v.safeParse(SessionRecordSchema, item)
+        return parsed.success ? [parsed.output] : []
+      }),
+    ),
+  ),
+  bestAccuracy: v.optional(v.number(), 0),
+  bestAverageResponseMs: v.optional(v.nullable(v.number()), null),
 })
+
+export type SessionRecord = v.InferOutput<typeof SessionRecordSchema>
+export type RecordsStore = {
+  sessions: SessionRecord[]
+  bestAccuracy: number
+  bestAverageResponseMs: number | null
+}
 
 export function createEmptyRecords(): RecordsStore {
   return {
@@ -48,71 +49,20 @@ export function parseRecords(raw: string | null): RecordsStore {
   }
 
   try {
-    const json: unknown = JSON.parse(raw)
-    const loose = v.safeParse(LooseRecordsSchema, json)
-    if (!loose.success) {
+    const parsed = v.safeParse(RecordsStoreSchema, JSON.parse(raw))
+    if (!parsed.success) {
       return createEmptyRecords()
     }
 
-    const sessions = (loose.output.sessions ?? []).flatMap((session) => {
-      const parsed = v.safeParse(SessionRecordSchema, session)
-      return parsed.success ? [parsed.output] : []
-    })
-
     return {
-      sessions,
-      bestAccuracy: loose.output.bestAccuracy ?? 0,
-      bestAverageResponseMs: loose.output.bestAverageResponseMs ?? null,
+      sessions: parsed.output.sessions,
+      bestAccuracy: parsed.output.bestAccuracy,
+      bestAverageResponseMs: parsed.output.bestAverageResponseMs,
     }
   } catch {
     return createEmptyRecords()
   }
 }
-
-type RecordsStorage = {
-  getItem: (key: string, initialValue: RecordsStore) => RecordsStore
-  setItem: (key: string, value: RecordsStore) => void
-  removeItem: (key: string) => void
-}
-
-function createRecordsStorage(): RecordsStorage {
-  return {
-    getItem(key, initialValue) {
-      if (typeof localStorage === 'undefined') {
-        return initialValue
-      }
-      return parseRecords(localStorage.getItem(key))
-    },
-    setItem(key, value) {
-      if (typeof localStorage === 'undefined') {
-        return
-      }
-      localStorage.setItem(key, JSON.stringify(value))
-    },
-    removeItem(key) {
-      if (typeof localStorage === 'undefined') {
-        return
-      }
-      localStorage.removeItem(key)
-    },
-  }
-}
-
-const recordsStorage = createRecordsStorage()
-
-export const jankenRecordsAtom = atomWithStorage(
-  JANKEN_RECORDS_STORAGE_KEY,
-  createEmptyRecords(),
-  recordsStorage,
-  { getOnInit: true },
-)
-
-export const acchiRecordsAtom = atomWithStorage(
-  ACCHI_RECORDS_STORAGE_KEY,
-  createEmptyRecords(),
-  recordsStorage,
-  { getOnInit: true },
-)
 
 export function appendSession(
   current: RecordsStore,
@@ -145,6 +95,41 @@ export function appendSession(
     bestAverageResponseMs,
   }
 }
+
+const recordsStorage = {
+  getItem(key: string, initialValue: RecordsStore) {
+    if (typeof localStorage === 'undefined') {
+      return initialValue
+    }
+    return parseRecords(localStorage.getItem(key))
+  },
+  setItem(key: string, value: RecordsStore) {
+    if (typeof localStorage === 'undefined') {
+      return
+    }
+    localStorage.setItem(key, JSON.stringify(value))
+  },
+  removeItem(key: string) {
+    if (typeof localStorage === 'undefined') {
+      return
+    }
+    localStorage.removeItem(key)
+  },
+}
+
+export const recordsAtom = atomWithStorage<RecordsStore>(
+  RECORDS_STORAGE_KEY,
+  createEmptyRecords(),
+  recordsStorage,
+  { getOnInit: true },
+)
+
+export const acchiRecordsAtom = atomWithStorage<RecordsStore>(
+  ACCHI_RECORDS_STORAGE_KEY,
+  createEmptyRecords(),
+  recordsStorage,
+  { getOnInit: true },
+)
 
 export function formatAccuracy(accuracy: number): string {
   return `${Math.round(accuracy * 100)}%`

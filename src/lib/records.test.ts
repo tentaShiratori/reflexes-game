@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test'
 import {
   ACCHI_RECORDS_STORAGE_KEY,
-  JANKEN_RECORDS_STORAGE_KEY,
+  RECORDS_STORAGE_KEY,
   appendSession,
   createEmptyRecords,
   formatAccuracy,
@@ -20,7 +20,7 @@ describe('parseRecords', () => {
     expect(parseRecords('"nope"')).toEqual(createEmptyRecords())
   })
 
-  it('keeps only valid sessions via valibot', () => {
+  it('keeps only valid sessions', () => {
     const parsed = parseRecords(
       JSON.stringify({
         sessions: [
@@ -79,6 +79,6 @@ describe('formatters', () => {
 
 describe('storage keys', () => {
   it('keeps janken and acchi record keys distinct', () => {
-    expect(JANKEN_RECORDS_STORAGE_KEY).not.toBe(ACCHI_RECORDS_STORAGE_KEY)
+    expect(RECORDS_STORAGE_KEY).not.toBe(ACCHI_RECORDS_STORAGE_KEY)
   })
 })

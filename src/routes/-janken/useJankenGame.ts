@@ -1,26 +1,26 @@
 import { useAtom } from 'jotai'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  HAND_VALUES,
-  INSTRUCTION_VALUES,
   TOTAL_ROUNDS,
   getCorrectHand,
+  listHands,
+  listInstructions,
   pickRandom,
   randomDelayMs,
   summarizeResults,
-  type Hand,
-  type Instruction,
+  type HANDS,
+  type INSTRUCTIONS,
   type RoundResult,
 } from '#/lib/janken'
-import { appendSession, jankenRecordsAtom, type RecordsStore } from '#/lib/records'
+import { appendSession, recordsAtom } from '#/lib/records'
 
 type GamePhase = 'idle' | 'waiting' | 'answering' | 'feedback' | 'result'
 
 type GameState = {
   phase: GamePhase
   round: number
-  instruction: Instruction | null
-  systemHand: Hand | null
+  instruction: INSTRUCTIONS | null
+  systemHand: HANDS | null
   lastResult: RoundResult | null
   results: RoundResult[]
 }
@@ -39,14 +39,14 @@ function createIdleState(): GameState {
 }
 
 export function useJankenGame() {
-  const [records, setRecords] = useAtom(jankenRecordsAtom)
+  const [records, setRecords] = useAtom(recordsAtom)
   const [state, setState] = useState<GameState>(createIdleState)
   const phaseRef = useRef<GamePhase>(state.phase)
   const resultsRef = useRef<RoundResult[]>([])
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const promptShownAtRef = useRef<number>(0)
-  const activeRoundRef = useRef<{ instruction: Instruction; systemHand: Hand } | null>(null)
+  const activeRoundRef = useRef<{ instruction: INSTRUCTIONS; systemHand: HANDS } | null>(null)
 
   const clearTimers = useCallback(() => {
     if (revealTimerRef.current !== null) {
@@ -69,8 +69,8 @@ export function useJankenGame() {
     (roundNumber: number, previousResults: RoundResult[]) => {
       clearTimers()
 
-      const instruction = pickRandom(INSTRUCTION_VALUES)
-      const systemHand = pickRandom(HAND_VALUES)
+      const instruction = pickRandom(listInstructions())
+      const systemHand = pickRandom(listHands())
       activeRoundRef.current = { instruction, systemHand }
       resultsRef.current = previousResults
       phaseRef.current = 'waiting'
@@ -104,7 +104,7 @@ export function useJankenGame() {
   }, [beginRound])
 
   const answer = useCallback(
-    (userHand: Hand) => {
+    (userHand: HANDS) => {
       const active = activeRoundRef.current
       if (!active || phaseRef.current !== 'answering') {
         return
@@ -133,7 +133,7 @@ export function useJankenGame() {
       feedbackTimerRef.current = setTimeout(() => {
         if (nextResults.length >= TOTAL_ROUNDS) {
           const summary = summarizeResults(nextResults)
-          setRecords((current: RecordsStore) =>
+          setRecords((current) =>
             appendSession(current, {
               accuracy: summary.accuracy,
               averageResponseMs: summary.averageResponseMs,

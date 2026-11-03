@@ -1,8 +1,8 @@
 import {
-  HAND_VALUES,
   TOTAL_ROUNDS,
-  handLabel,
-  instructionLabel,
+  getHandLabel,
+  getInstructionLabel,
+  listHands,
   summarizeResults,
 } from '#/lib/janken'
 import { formatAccuracy, formatResponseMs } from '#/lib/records'
@@ -84,10 +84,10 @@ export function JankenGame() {
           <PlayPanel aria-live="polite">
             <RoundMeter round={state.round} total={TOTAL_ROUNDS} />
             <InstructionDisplay
-              text={state.instruction ? instructionLabel(state.instruction) : ''}
+              text={state.instruction ? getInstructionLabel(state.instruction) : ''}
             />
             <PromptArea waiting={state.phase === 'waiting'} waitingText="手が出るまで待機…">
-              {state.systemHand ? handLabel(state.systemHand) : ''}
+              {state.systemHand ? getHandLabel(state.systemHand) : ''}
             </PromptArea>
 
             {state.phase === 'feedback' && state.lastResult ? (
@@ -97,14 +97,14 @@ export function JankenGame() {
               />
             ) : (
               <ChoiceGrid>
-                {HAND_VALUES.map((hand) => (
+                {listHands().map((hand) => (
                   <ChoiceButton
                     key={hand}
                     type="button"
                     disabled={state.phase !== 'answering'}
                     onClick={() => answer(hand)}
                   >
-                    {handLabel(hand)}
+                    {getHandLabel(hand)}
                   </ChoiceButton>
                 ))}
               </ChoiceGrid>

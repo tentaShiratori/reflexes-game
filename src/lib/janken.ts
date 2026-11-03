@@ -6,7 +6,7 @@ export const HANDS = {
   PAPER: 'paper',
 } as const
 
-export type Hand = (typeof HANDS)[keyof typeof HANDS]
+export type HANDS = (typeof HANDS)[keyof typeof HANDS]
 
 export const INSTRUCTIONS = {
   LOSE: 'lose',
@@ -14,12 +14,28 @@ export const INSTRUCTIONS = {
   DRAW: 'draw',
 } as const
 
-export type Instruction = (typeof INSTRUCTIONS)[keyof typeof INSTRUCTIONS]
+export type INSTRUCTIONS = (typeof INSTRUCTIONS)[keyof typeof INSTRUCTIONS]
 
-export const HAND_VALUES = Object.values(HANDS)
-export const INSTRUCTION_VALUES = Object.values(INSTRUCTIONS)
+const HAND_LIST = Object.values(HANDS)
+const INSTRUCTION_LIST = Object.values(INSTRUCTIONS)
 
-export function handLabel(hand: Hand): string {
+/** その手が勝つ相手 */
+const BEATS: Record<HANDS, HANDS> = {
+  [HANDS.ROCK]: HANDS.SCISSORS,
+  [HANDS.SCISSORS]: HANDS.PAPER,
+  [HANDS.PAPER]: HANDS.ROCK,
+}
+
+/** その手に勝つ手 */
+const BEATEN_BY: Record<HANDS, HANDS> = {
+  [HANDS.ROCK]: HANDS.PAPER,
+  [HANDS.SCISSORS]: HANDS.ROCK,
+  [HANDS.PAPER]: HANDS.SCISSORS,
+}
+
+export { TOTAL_ROUNDS, pickRandom, randomDelayMs, summarizeResults }
+
+export function getHandLabel(hand: HANDS): string {
   switch (hand) {
     case HANDS.ROCK:
       return 'グー'
@@ -30,7 +46,7 @@ export function handLabel(hand: Hand): string {
   }
 }
 
-export function instructionLabel(instruction: Instruction): string {
+export function getInstructionLabel(instruction: INSTRUCTIONS): string {
   switch (instruction) {
     case INSTRUCTIONS.LOSE:
       return '負けて'
@@ -41,23 +57,15 @@ export function instructionLabel(instruction: Instruction): string {
   }
 }
 
-/** その手が勝つ相手 */
-const BEATS: Record<Hand, Hand> = {
-  [HANDS.ROCK]: HANDS.SCISSORS,
-  [HANDS.SCISSORS]: HANDS.PAPER,
-  [HANDS.PAPER]: HANDS.ROCK,
+export function listHands(): HANDS[] {
+  return HAND_LIST
 }
 
-/** その手に勝つ手 */
-const BEATEN_BY: Record<Hand, Hand> = {
-  [HANDS.ROCK]: HANDS.PAPER,
-  [HANDS.SCISSORS]: HANDS.ROCK,
-  [HANDS.PAPER]: HANDS.SCISSORS,
+export function listInstructions(): INSTRUCTIONS[] {
+  return INSTRUCTION_LIST
 }
 
-export { TOTAL_ROUNDS, pickRandom, randomDelayMs, summarizeResults }
-
-export function getCorrectHand(systemHand: Hand, instruction: Instruction): Hand {
+export function getCorrectHand(systemHand: HANDS, instruction: INSTRUCTIONS): HANDS {
   switch (instruction) {
     case INSTRUCTIONS.DRAW:
       return systemHand
@@ -69,9 +77,9 @@ export function getCorrectHand(systemHand: Hand, instruction: Instruction): Hand
 }
 
 export type RoundResult = {
-  instruction: Instruction
-  systemHand: Hand
-  userHand: Hand
+  instruction: INSTRUCTIONS
+  systemHand: HANDS
+  userHand: HANDS
   correct: boolean
   responseMs: number
 }

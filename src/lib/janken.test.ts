@@ -3,8 +3,8 @@ import {
   HANDS,
   INSTRUCTIONS,
   getCorrectHand,
-  handLabel,
-  instructionLabel,
+  getHandLabel,
+  getInstructionLabel,
   pickRandom,
   randomDelayMs,
   summarizeResults,
@@ -32,9 +32,9 @@ describe('getCorrectHand', () => {
 })
 
 describe('labels', () => {
-  it('returns Japanese labels for hands and instructions', () => {
-    expect(handLabel(HANDS.ROCK)).toBe('グー')
-    expect(instructionLabel(INSTRUCTIONS.WIN)).toBe('勝って')
+  it('returns japanese labels for hands and instructions', () => {
+    expect(getHandLabel(HANDS.ROCK)).toBe('グー')
+    expect(getInstructionLabel(INSTRUCTIONS.LOSE)).toBe('負けて')
   })
 })
 

@@ -5,6 +5,7 @@ import { HubHome } from './-index/HubHome'
 
 afterEach(() => {
   cleanup()
+  localStorage.clear()
 })
 
 describe('Home', () => {

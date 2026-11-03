@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
-import { JANKEN_RECORDS_STORAGE_KEY } from '#/lib/records'
+import { RECORDS_STORAGE_KEY } from '#/lib/records'
 import { renderWithRouter } from '#/test/renderWithRouter'
 import { JankenGame } from './JankenGame'
 
@@ -48,7 +48,7 @@ describe('JankenGame', () => {
 
   it('shows stored history on the idle screen', async () => {
     localStorage.setItem(
-      JANKEN_RECORDS_STORAGE_KEY,
+      RECORDS_STORAGE_KEY,
       JSON.stringify({
         sessions: [
           {
@@ -91,6 +91,6 @@ describe('JankenGame', () => {
 
     expect(screen.getByRole('heading', { name: '結果' })).toBeInTheDocument()
     expect(screen.getByTestId('result-accuracy')).toHaveTextContent('100%')
-    expect(localStorage.getItem(JANKEN_RECORDS_STORAGE_KEY)).toContain('"accuracy":1')
+    expect(localStorage.getItem(RECORDS_STORAGE_KEY)).toContain('"accuracy":1')
   })
 })
