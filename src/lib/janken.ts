@@ -1,46 +1,77 @@
-export type Hand = 'rock' | 'scissors' | 'paper'
-export type Instruction = 'lose' | 'win' | 'draw'
+export const HANDS = {
+  ROCK: 'rock',
+  SCISSORS: 'scissors',
+  PAPER: 'paper',
+} as const
 
-export const HANDS = ['rock', 'scissors', 'paper'] as const
-export const INSTRUCTIONS = ['lose', 'win', 'draw'] as const
+export type HANDS = (typeof HANDS)[keyof typeof HANDS]
 
-export const HAND_LABELS: Record<Hand, string> = {
-  rock: 'グー',
-  scissors: 'チョキ',
-  paper: 'パー',
-}
+export const INSTRUCTIONS = {
+  LOSE: 'lose',
+  WIN: 'win',
+  DRAW: 'draw',
+} as const
 
-export const INSTRUCTION_LABELS: Record<Instruction, string> = {
-  lose: '負けて',
-  win: '勝って',
-  draw: 'あいこで',
-}
-
-/** その手が勝つ相手 */
-const BEATS: Record<Hand, Hand> = {
-  rock: 'scissors',
-  scissors: 'paper',
-  paper: 'rock',
-}
-
-/** その手に勝つ手 */
-const BEATEN_BY: Record<Hand, Hand> = {
-  rock: 'paper',
-  scissors: 'rock',
-  paper: 'scissors',
-}
+export type INSTRUCTIONS = (typeof INSTRUCTIONS)[keyof typeof INSTRUCTIONS]
 
 export const TOTAL_ROUNDS = 10
 const MIN_DELAY_MS = 1000
 const MAX_DELAY_MS = 3000
 
-export function getCorrectHand(systemHand: Hand, instruction: Instruction): Hand {
+const HAND_LIST = Object.values(HANDS)
+const INSTRUCTION_LIST = Object.values(INSTRUCTIONS)
+
+/** その手が勝つ相手 */
+const BEATS: Record<HANDS, HANDS> = {
+  [HANDS.ROCK]: HANDS.SCISSORS,
+  [HANDS.SCISSORS]: HANDS.PAPER,
+  [HANDS.PAPER]: HANDS.ROCK,
+}
+
+/** その手に勝つ手 */
+const BEATEN_BY: Record<HANDS, HANDS> = {
+  [HANDS.ROCK]: HANDS.PAPER,
+  [HANDS.SCISSORS]: HANDS.ROCK,
+  [HANDS.PAPER]: HANDS.SCISSORS,
+}
+
+export function getHandLabel(hand: HANDS): string {
+  switch (hand) {
+    case HANDS.ROCK:
+      return 'グー'
+    case HANDS.SCISSORS:
+      return 'チョキ'
+    case HANDS.PAPER:
+      return 'パー'
+  }
+}
+
+export function getInstructionLabel(instruction: INSTRUCTIONS): string {
   switch (instruction) {
-    case 'draw':
+    case INSTRUCTIONS.LOSE:
+      return '負けて'
+    case INSTRUCTIONS.WIN:
+      return '勝って'
+    case INSTRUCTIONS.DRAW:
+      return 'あいこで'
+  }
+}
+
+export function listHands(): HANDS[] {
+  return HAND_LIST
+}
+
+export function listInstructions(): INSTRUCTIONS[] {
+  return INSTRUCTION_LIST
+}
+
+export function getCorrectHand(systemHand: HANDS, instruction: INSTRUCTIONS): HANDS {
+  switch (instruction) {
+    case INSTRUCTIONS.DRAW:
       return systemHand
-    case 'win':
+    case INSTRUCTIONS.WIN:
       return BEATEN_BY[systemHand]
-    case 'lose':
+    case INSTRUCTIONS.LOSE:
       return BEATS[systemHand]
   }
 }
@@ -55,9 +86,9 @@ export function randomDelayMs(minMs: number = MIN_DELAY_MS, maxMs: number = MAX_
 }
 
 export type RoundResult = {
-  instruction: Instruction
-  systemHand: Hand
-  userHand: Hand
+  instruction: INSTRUCTIONS
+  systemHand: HANDS
+  userHand: HANDS
   correct: boolean
   responseMs: number
 }

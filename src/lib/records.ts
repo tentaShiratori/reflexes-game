@@ -1,21 +1,38 @@
+import { atomWithStorage } from 'jotai/utils'
+import * as v from 'valibot'
 import { TOTAL_ROUNDS } from './janken'
 
-export type SessionRecord = {
-  accuracy: number
-  averageResponseMs: number
-  correctCount: number
-  totalRounds: number
-  playedAt: string
-}
+export const RECORDS_STORAGE_KEY = 'reflexes-janken-records'
+const MAX_SESSIONS = 50
 
+const SessionRecordSchema = v.object({
+  accuracy: v.number(),
+  averageResponseMs: v.number(),
+  correctCount: v.number(),
+  totalRounds: v.number(),
+  playedAt: v.string(),
+})
+
+const RecordsStoreSchema = v.object({
+  sessions: v.pipe(
+    v.array(v.unknown()),
+    v.transform((items) =>
+      items.flatMap((item) => {
+        const parsed = v.safeParse(SessionRecordSchema, item)
+        return parsed.success ? [parsed.output] : []
+      }),
+    ),
+  ),
+  bestAccuracy: v.optional(v.number(), 0),
+  bestAverageResponseMs: v.optional(v.nullable(v.number()), null),
+})
+
+export type SessionRecord = v.InferOutput<typeof SessionRecordSchema>
 export type RecordsStore = {
   sessions: SessionRecord[]
   bestAccuracy: number
   bestAverageResponseMs: number | null
 }
-
-export const RECORDS_STORAGE_KEY = 'reflexes-janken-records'
-const MAX_SESSIONS = 50
 
 export function createEmptyRecords(): RecordsStore {
   return {
@@ -25,51 +42,29 @@ export function createEmptyRecords(): RecordsStore {
   }
 }
 
-function isSessionRecord(value: unknown): value is SessionRecord {
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
-
-  const record = value as Record<string, unknown>
-  return (
-    typeof record.accuracy === 'number' &&
-    typeof record.averageResponseMs === 'number' &&
-    typeof record.correctCount === 'number' &&
-    typeof record.totalRounds === 'number' &&
-    typeof record.playedAt === 'string'
-  )
-}
-
 export function parseRecords(raw: string | null): RecordsStore {
   if (!raw) {
     return createEmptyRecords()
   }
 
   try {
-    const parsed: unknown = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) {
+    const parsed = v.safeParse(RecordsStoreSchema, JSON.parse(raw))
+    if (!parsed.success) {
       return createEmptyRecords()
     }
 
-    const data = parsed as Record<string, unknown>
-    const sessions = Array.isArray(data.sessions) ? data.sessions.filter(isSessionRecord) : []
-
     return {
-      sessions,
-      bestAccuracy: typeof data.bestAccuracy === 'number' ? data.bestAccuracy : 0,
-      bestAverageResponseMs:
-        typeof data.bestAverageResponseMs === 'number' ? data.bestAverageResponseMs : null,
+      sessions: parsed.output.sessions,
+      bestAccuracy: parsed.output.bestAccuracy,
+      bestAverageResponseMs: parsed.output.bestAverageResponseMs,
     }
   } catch {
     return createEmptyRecords()
   }
 }
 
-export function loadRecords(storage: Storage = localStorage): RecordsStore {
-  return parseRecords(storage.getItem(RECORDS_STORAGE_KEY))
-}
-
-export function saveSession(
+export function appendSession(
+  current: RecordsStore,
   input: {
     accuracy: number
     averageResponseMs: number
@@ -77,9 +72,7 @@ export function saveSession(
     totalRounds?: number
     playedAt?: string
   },
-  storage: Storage = localStorage,
 ): RecordsStore {
-  const current = loadRecords(storage)
   const session: SessionRecord = {
     accuracy: input.accuracy,
     averageResponseMs: input.averageResponseMs,
@@ -95,15 +88,38 @@ export function saveSession(
       ? session.averageResponseMs
       : Math.min(current.bestAverageResponseMs, session.averageResponseMs)
 
-  const next: RecordsStore = {
+  return {
     sessions,
     bestAccuracy,
     bestAverageResponseMs,
   }
-
-  storage.setItem(RECORDS_STORAGE_KEY, JSON.stringify(next))
-  return next
 }
+
+export const recordsAtom = atomWithStorage<RecordsStore>(
+  RECORDS_STORAGE_KEY,
+  createEmptyRecords(),
+  {
+    getItem(key, initialValue) {
+      if (typeof localStorage === 'undefined') {
+        return initialValue
+      }
+      return parseRecords(localStorage.getItem(key))
+    },
+    setItem(key, value) {
+      if (typeof localStorage === 'undefined') {
+        return
+      }
+      localStorage.setItem(key, JSON.stringify(value))
+    },
+    removeItem(key) {
+      if (typeof localStorage === 'undefined') {
+        return
+      }
+      localStorage.removeItem(key)
+    },
+  },
+  { getOnInit: true },
+)
 
 export function formatAccuracy(accuracy: number): string {
   return `${Math.round(accuracy * 100)}%`

@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { Provider as JotaiProvider } from 'jotai'
 
 import appCss from '../styles.css?url'
 
@@ -43,7 +44,7 @@ export function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <JotaiProvider>{children}</JotaiProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

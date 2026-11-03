@@ -1,7 +1,17 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { Provider, createStore } from 'jotai'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
-import { JankenGame } from './JankenGame'
 import { RECORDS_STORAGE_KEY } from '#/lib/records'
+import { JankenGame } from './JankenGame'
+
+function renderGame() {
+  const store = createStore()
+  return render(
+    <Provider store={store}>
+      <JankenGame />
+    </Provider>,
+  )
+}
 
 afterEach(() => {
   cleanup()
@@ -16,7 +26,7 @@ beforeEach(() => {
 
 describe('JankenGame', () => {
   it('renders the brand and start controls on idle', () => {
-    render(<JankenGame />)
+    renderGame()
 
     expect(screen.getByRole('heading', { name: '後だしじゃんけん' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'スタート' })).toBeInTheDocument()
@@ -30,7 +40,7 @@ describe('JankenGame', () => {
       .mockReturnValueOnce(0) // delay -> 1000ms
 
     vi.useFakeTimers()
-    render(<JankenGame />)
+    renderGame()
 
     fireEvent.click(screen.getByRole('button', { name: 'スタート' }))
 
@@ -66,7 +76,7 @@ describe('JankenGame', () => {
       }),
     )
 
-    render(<JankenGame />)
+    renderGame()
 
     expect(screen.getByText('直近の記録')).toBeInTheDocument()
     expect(screen.getAllByText('80%').length).toBeGreaterThan(0)
@@ -77,7 +87,7 @@ describe('JankenGame', () => {
     vi.spyOn(Math, 'random').mockImplementation(() => 0)
     vi.useFakeTimers()
 
-    render(<JankenGame />)
+    renderGame()
     fireEvent.click(screen.getByRole('button', { name: 'スタート' }))
 
     for (let round = 0; round < 10; round += 1) {

@@ -1,20 +1,23 @@
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
-
-vi.mock('#/components/JankenGame', () => ({
-  JankenGame: () => <div>後だしじゃんけんゲーム</div>,
-}))
-
-const { Home } = await import('./index')
+import { Provider, createStore } from 'jotai'
+import { afterEach, describe, expect, it } from 'vite-plus/test'
+import { Home } from './index'
 
 afterEach(() => {
   cleanup()
+  localStorage.clear()
 })
 
 describe('Home', () => {
   it('renders the janken game', () => {
-    render(<Home />)
+    const store = createStore()
+    render(
+      <Provider store={store}>
+        <Home />
+      </Provider>,
+    )
 
-    expect(screen.getByText('後だしじゃんけんゲーム')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '後だしじゃんけん' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'スタート' })).toBeInTheDocument()
   })
 })
