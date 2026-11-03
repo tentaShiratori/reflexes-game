@@ -14,6 +14,6 @@ export const Route = createFileRoute('/janken')({
   }),
 })
 
-export function JankenPage() {
+function JankenPage() {
   return <JankenGame />
 }

@@ -14,6 +14,6 @@ export const Route = createFileRoute('/acchi')({
   }),
 })
 
-export function AcchiPage() {
+function AcchiPage() {
   return <AcchiGame />
 }
