@@ -1,7 +1,7 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { Provider, createStore } from 'jotai'
+import { cleanup, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vite-plus/test'
-import { Home } from './index'
+import { renderWithRouter } from '#/test/renderWithRouter'
+import { HubHome } from './-index/HubHome'
 
 afterEach(() => {
   cleanup()
@@ -9,15 +9,14 @@ afterEach(() => {
 })
 
 describe('Home', () => {
-  it('renders the janken game', () => {
-    const store = createStore()
-    render(
-      <Provider store={store}>
-        <Home />
-      </Provider>,
-    )
+  it('renders the hub with both training links', async () => {
+    renderWithRouter(<HubHome />, { path: '/' })
 
-    expect(screen.getByRole('heading', { name: '後だしじゃんけん' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'スタート' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Reflex Drill' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /後だしじゃんけん/ })).toHaveAttribute(
+      'href',
+      '/janken',
+    )
+    expect(screen.getByRole('link', { name: /あっち向いてホイ/ })).toHaveAttribute('href', '/acchi')
   })
 })

@@ -1,15 +1,5 @@
-import styled, { keyframes } from 'styled-components'
-
-const riseIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`
+import styled from 'styled-components'
+import { riseIn } from './keyframes'
 
 const Brand = styled.header`
   display: grid;
@@ -40,12 +30,18 @@ const Lead = styled.p`
   line-height: 1.7;
 `
 
-export function GameBrand() {
+type GameBrandProps = {
+  title: string
+  lead: string
+  kicker?: string
+}
+
+export function GameBrand({ title, lead, kicker = 'Reflex Drill' }: GameBrandProps) {
   return (
     <Brand>
-      <Kicker>Reflex Drill</Kicker>
-      <Title>後だしじゃんけん</Title>
-      <Lead>指示を見て、遅れて出る手に素早く合わせろ。</Lead>
+      <Kicker>{kicker}</Kicker>
+      <Title>{title}</Title>
+      <Lead>{lead}</Lead>
     </Brand>
   )
 }

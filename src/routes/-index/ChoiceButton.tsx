@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-export const HandButton = styled.button`
+export const ChoiceButton = styled.button`
   font: inherit;
   cursor: pointer;
   min-height: 4.5rem;

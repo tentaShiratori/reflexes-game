@@ -1,28 +1,28 @@
 import { useAtom } from 'jotai'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  ACCHI_INSTRUCTION_VALUES,
+  DIRECTION_VALUES,
   TOTAL_ROUNDS,
-  getCorrectHand,
-  listHands,
-  listInstructions,
+  isCorrectDirection,
   pickRandom,
   randomDelayMs,
   summarizeResults,
-  type HANDS,
-  type INSTRUCTIONS,
-  type RoundResult,
-} from '#/lib/janken'
-import { appendSession, recordsAtom } from '#/lib/records'
+  type AcchiInstruction,
+  type AcchiRoundResult,
+  type Direction,
+} from '#/lib/acchi'
+import { acchiRecordsAtom, appendSession, type RecordsStore } from '#/lib/records'
 
 type GamePhase = 'idle' | 'waiting' | 'answering' | 'feedback' | 'result'
 
 type GameState = {
   phase: GamePhase
   round: number
-  instruction: INSTRUCTIONS | null
-  systemHand: HANDS | null
-  lastResult: RoundResult | null
-  results: RoundResult[]
+  instruction: AcchiInstruction | null
+  systemDirection: Direction | null
+  lastResult: AcchiRoundResult | null
+  results: AcchiRoundResult[]
 }
 
 const FEEDBACK_MS = 700
@@ -32,21 +32,24 @@ function createIdleState(): GameState {
     phase: 'idle',
     round: 0,
     instruction: null,
-    systemHand: null,
+    systemDirection: null,
     lastResult: null,
     results: [],
   }
 }
 
-export function useJankenGame() {
-  const [records, setRecords] = useAtom(recordsAtom)
+export function useAcchiGame() {
+  const [records, setRecords] = useAtom(acchiRecordsAtom)
   const [state, setState] = useState<GameState>(createIdleState)
   const phaseRef = useRef<GamePhase>(state.phase)
-  const resultsRef = useRef<RoundResult[]>([])
+  const resultsRef = useRef<AcchiRoundResult[]>([])
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const promptShownAtRef = useRef<number>(0)
-  const activeRoundRef = useRef<{ instruction: INSTRUCTIONS; systemHand: HANDS } | null>(null)
+  const activeRoundRef = useRef<{
+    instruction: AcchiInstruction
+    systemDirection: Direction
+  } | null>(null)
 
   const clearTimers = useCallback(() => {
     if (revealTimerRef.current !== null) {
@@ -66,12 +69,12 @@ export function useJankenGame() {
   useEffect(() => clearTimers, [clearTimers])
 
   const beginRound = useCallback(
-    (roundNumber: number, previousResults: RoundResult[]) => {
+    (roundNumber: number, previousResults: AcchiRoundResult[]) => {
       clearTimers()
 
-      const instruction = pickRandom(listInstructions())
-      const systemHand = pickRandom(listHands())
-      activeRoundRef.current = { instruction, systemHand }
+      const instruction = pickRandom(ACCHI_INSTRUCTION_VALUES)
+      const systemDirection = pickRandom(DIRECTION_VALUES)
+      activeRoundRef.current = { instruction, systemDirection }
       resultsRef.current = previousResults
       phaseRef.current = 'waiting'
 
@@ -79,7 +82,7 @@ export function useJankenGame() {
         phase: 'waiting',
         round: roundNumber,
         instruction,
-        systemHand: null,
+        systemDirection: null,
         lastResult: null,
         results: previousResults,
       })
@@ -91,7 +94,7 @@ export function useJankenGame() {
         setState((current) => ({
           ...current,
           phase: 'answering',
-          systemHand,
+          systemDirection,
         }))
       }, delay)
     },
@@ -104,7 +107,7 @@ export function useJankenGame() {
   }, [beginRound])
 
   const answer = useCallback(
-    (userHand: HANDS) => {
+    (userDirection: Direction) => {
       const active = activeRoundRef.current
       if (!active || phaseRef.current !== 'answering') {
         return
@@ -112,11 +115,11 @@ export function useJankenGame() {
 
       phaseRef.current = 'feedback'
       const responseMs = Math.max(0, Math.round(performance.now() - promptShownAtRef.current))
-      const correct = userHand === getCorrectHand(active.systemHand, active.instruction)
-      const result: RoundResult = {
+      const correct = isCorrectDirection(active.systemDirection, userDirection, active.instruction)
+      const result: AcchiRoundResult = {
         instruction: active.instruction,
-        systemHand: active.systemHand,
-        userHand,
+        systemDirection: active.systemDirection,
+        userDirection,
         correct,
         responseMs,
       }
@@ -133,7 +136,7 @@ export function useJankenGame() {
       feedbackTimerRef.current = setTimeout(() => {
         if (nextResults.length >= TOTAL_ROUNDS) {
           const summary = summarizeResults(nextResults)
-          setRecords((current) =>
+          setRecords((current: RecordsStore) =>
             appendSession(current, {
               accuracy: summary.accuracy,
               averageResponseMs: summary.averageResponseMs,
@@ -147,7 +150,7 @@ export function useJankenGame() {
             ...current,
             phase: 'result',
             instruction: null,
-            systemHand: null,
+            systemDirection: null,
           }))
           return
         }
@@ -167,8 +170,7 @@ export function useJankenGame() {
   }, [clearTimers])
 
   return {
-    state,
-    records,
+    state: { ...state, records },
     startGame,
     answer,
     resetToIdle,

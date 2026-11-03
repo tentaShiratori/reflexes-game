@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import styled from 'styled-components'
 
 const Grid = styled.dl`
@@ -29,19 +28,23 @@ const Value = styled.dd`
   font-size: clamp(1.3rem, 3vw, 1.8rem);
 `
 
-type RecordGridItem = {
+type RecordStatItem = {
   label: string
-  value: ReactNode
-  valueTestId?: string
+  value: string | number
+  testId?: string
 }
 
-export function RecordGrid({ items }: { items: RecordGridItem[] }) {
+type RecordStatsProps = {
+  items: RecordStatItem[]
+}
+
+export function RecordStats({ items }: RecordStatsProps) {
   return (
     <Grid>
       {items.map((item) => (
         <Item key={item.label}>
           <Label>{item.label}</Label>
-          <Value data-testid={item.valueTestId}>{item.value}</Value>
+          <Value data-testid={item.testId}>{item.value}</Value>
         </Item>
       ))}
     </Grid>

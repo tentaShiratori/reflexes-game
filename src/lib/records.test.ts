@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test'
 import {
+  ACCHI_RECORDS_STORAGE_KEY,
+  RECORDS_STORAGE_KEY,
   appendSession,
   createEmptyRecords,
   formatAccuracy,
@@ -72,5 +74,11 @@ describe('formatters', () => {
   it('formats accuracy and response speed for display', () => {
     expect(formatAccuracy(0.85)).toBe('85%')
     expect(formatResponseMs(1234)).toBe('1.23秒')
+  })
+})
+
+describe('storage keys', () => {
+  it('keeps janken and acchi record keys distinct', () => {
+    expect(RECORDS_STORAGE_KEY).not.toBe(ACCHI_RECORDS_STORAGE_KEY)
   })
 })

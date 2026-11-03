@@ -10,7 +10,9 @@ export const GhostButton = styled.button`
   color: var(--ink);
   transition:
     transform 0.18s ease,
-    background-color 0.18s ease;
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
 
   &:hover {
     background: rgba(15, 143, 123, 0.08);

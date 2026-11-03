@@ -1,16 +1,7 @@
-import styled, { keyframes } from 'styled-components'
-import { formatAccuracy, formatResponseMs, type SessionRecord } from '#/lib/records'
-
-const riseIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`
+import styled from 'styled-components'
+import { riseIn } from './keyframes'
+import type { SessionRecord } from '#/lib/records'
+import { formatAccuracy, formatResponseMs } from '#/lib/records'
 
 const Panel = styled.section`
   background: var(--panel);
@@ -58,10 +49,15 @@ const PlayedAt = styled.time`
   }
 `
 
-export function HistoryPanel({ sessions }: { sessions: SessionRecord[] }) {
+type HistoryPanelProps = {
+  sessions: SessionRecord[]
+  headingId: string
+}
+
+export function HistoryPanel({ sessions, headingId }: HistoryPanelProps) {
   return (
-    <Panel aria-labelledby="history-heading">
-      <Heading id="history-heading">直近の記録</Heading>
+    <Panel aria-labelledby={headingId}>
+      <Heading id={headingId}>直近の記録</Heading>
       <List>
         {sessions.slice(0, 5).map((session) => (
           <Item key={session.playedAt}>

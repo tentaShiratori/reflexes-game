@@ -11,6 +11,7 @@ export const PrimaryButton = styled.button`
   transition:
     transform 0.18s ease,
     background-color 0.18s ease,
+    color 0.18s ease,
     border-color 0.18s ease;
 
   &:hover {
