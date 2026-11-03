@@ -1,0 +1,12 @@
+---
+description: Component and style colocation conventions for this repo
+alwaysApply: true
+---
+
+# Component Colocation
+
+- Prefer **1 file = 1 component**.
+- Style components like styled-components (CSS-in-JS with `styled-components`). Put styles in the same file as the component that owns them.
+- Route-specific UI lives under a colocated ignored folder, e.g. `src/routes/-index/` for the `/` page. Do not dump page UI into `src/components/` unless it is truly shared across routes.
+- Keep domain/pure logic in `src/lib/`. Keep route UI state hooks next to the route UI (e.g. `src/routes/-index/useJankenGame.ts`).
+- Global `src/styles.css` is for resets, fonts, and CSS variables only — not page/component layout styles.

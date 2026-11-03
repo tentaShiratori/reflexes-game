@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { Provider as JotaiProvider } from 'jotai'
 
 import appCss from '../styles.css?url'
 
@@ -15,7 +16,11 @@ export function rootHead() {
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: '後だしじゃんけん | Reflex Drill',
+      },
+      {
+        name: 'description',
+        content: '指示に合わせて後出しの手を素早く選ぶ、反射神経トレーニングゲーム。',
       },
     ],
     links: [
@@ -34,12 +39,12 @@ export const Route = createRootRoute({
 
 export function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <JotaiProvider>{children}</JotaiProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

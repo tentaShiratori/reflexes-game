@@ -46,7 +46,7 @@ describe('rootHead', () => {
     expect(head.meta).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ charSet: 'utf-8' }),
-        expect.objectContaining({ title: 'TanStack Start Starter' }),
+        expect.objectContaining({ title: '後だしじゃんけん | Reflex Drill' }),
       ]),
     )
     expect(head.links).toEqual([
