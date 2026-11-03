@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AcchiGame } from '#/components/AcchiGame'
+import { AcchiGame } from './-acchi/AcchiGame'
 
 export const Route = createFileRoute('/acchi')({
-  component: AcchiPage,
+  component: AcchiGame,
   head: () => ({
     meta: [
       { title: 'あっち向いてホイ | Reflex Drill' },
@@ -13,7 +13,3 @@ export const Route = createFileRoute('/acchi')({
     ],
   }),
 })
-
-function AcchiPage() {
-  return <AcchiGame />
-}

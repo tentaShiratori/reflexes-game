@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { JankenGame } from '#/components/JankenGame'
+import { JankenGame } from './-janken/JankenGame'
 
 export const Route = createFileRoute('/janken')({
-  component: JankenPage,
+  component: JankenGame,
   head: () => ({
     meta: [
       { title: '後だしじゃんけん | Reflex Drill' },
@@ -13,7 +13,3 @@ export const Route = createFileRoute('/janken')({
     ],
   }),
 })
-
-function JankenPage() {
-  return <JankenGame />
-}

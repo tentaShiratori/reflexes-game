@@ -1,7 +1,8 @@
+import { useAtom } from 'jotai'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  ACCHI_INSTRUCTIONS,
-  DIRECTIONS,
+  ACCHI_INSTRUCTION_VALUES,
+  DIRECTION_VALUES,
   TOTAL_ROUNDS,
   isCorrectDirection,
   pickRandom,
@@ -10,8 +11,8 @@ import {
   type AcchiInstruction,
   type AcchiRoundResult,
   type Direction,
-} from './acchi'
-import { ACCHI_RECORDS_STORAGE_KEY, loadRecords, saveSession, type RecordsStore } from './records'
+} from '#/lib/acchi'
+import { acchiRecordsAtom, appendSession, type RecordsStore } from '#/lib/records'
 
 type GamePhase = 'idle' | 'waiting' | 'answering' | 'feedback' | 'result'
 
@@ -22,20 +23,11 @@ type GameState = {
   systemDirection: Direction | null
   lastResult: AcchiRoundResult | null
   results: AcchiRoundResult[]
-  records: RecordsStore
 }
 
 const FEEDBACK_MS = 700
 
-function emptyRecords(): RecordsStore {
-  return {
-    sessions: [],
-    bestAccuracy: 0,
-    bestAverageResponseMs: null,
-  }
-}
-
-function createIdleState(records: RecordsStore): GameState {
+function createIdleState(): GameState {
   return {
     phase: 'idle',
     round: 0,
@@ -43,18 +35,12 @@ function createIdleState(records: RecordsStore): GameState {
     systemDirection: null,
     lastResult: null,
     results: [],
-    records,
   }
 }
 
 export function useAcchiGame() {
-  const [state, setState] = useState<GameState>(() =>
-    createIdleState(
-      typeof window === 'undefined'
-        ? emptyRecords()
-        : loadRecords(localStorage, ACCHI_RECORDS_STORAGE_KEY),
-    ),
-  )
+  const [records, setRecords] = useAtom(acchiRecordsAtom)
+  const [state, setState] = useState<GameState>(createIdleState)
   const phaseRef = useRef<GamePhase>(state.phase)
   const resultsRef = useRef<AcchiRoundResult[]>([])
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -80,33 +66,26 @@ export function useAcchiGame() {
     phaseRef.current = state.phase
   }, [state.phase])
 
-  useEffect(() => {
-    setState((current) => ({
-      ...current,
-      records: loadRecords(localStorage, ACCHI_RECORDS_STORAGE_KEY),
-    }))
-    return clearTimers
-  }, [clearTimers])
+  useEffect(() => clearTimers, [clearTimers])
 
   const beginRound = useCallback(
     (roundNumber: number, previousResults: AcchiRoundResult[]) => {
       clearTimers()
 
-      const instruction = pickRandom(ACCHI_INSTRUCTIONS)
-      const systemDirection = pickRandom(DIRECTIONS)
+      const instruction = pickRandom(ACCHI_INSTRUCTION_VALUES)
+      const systemDirection = pickRandom(DIRECTION_VALUES)
       activeRoundRef.current = { instruction, systemDirection }
       resultsRef.current = previousResults
       phaseRef.current = 'waiting'
 
-      setState((current) => ({
-        ...current,
+      setState({
         phase: 'waiting',
         round: roundNumber,
         instruction,
         systemDirection: null,
         lastResult: null,
         results: previousResults,
-      }))
+      })
 
       const delay = randomDelayMs()
       revealTimerRef.current = setTimeout(() => {
@@ -157,15 +136,13 @@ export function useAcchiGame() {
       feedbackTimerRef.current = setTimeout(() => {
         if (nextResults.length >= TOTAL_ROUNDS) {
           const summary = summarizeResults(nextResults)
-          const records = saveSession(
-            {
+          setRecords((current: RecordsStore) =>
+            appendSession(current, {
               accuracy: summary.accuracy,
               averageResponseMs: summary.averageResponseMs,
               correctCount: summary.correctCount,
               totalRounds: summary.totalRounds,
-            },
-            localStorage,
-            ACCHI_RECORDS_STORAGE_KEY,
+            }),
           )
 
           phaseRef.current = 'result'
@@ -174,7 +151,6 @@ export function useAcchiGame() {
             phase: 'result',
             instruction: null,
             systemDirection: null,
-            records,
           }))
           return
         }
@@ -182,7 +158,7 @@ export function useAcchiGame() {
         beginRound(nextResults.length + 1, nextResults)
       }, FEEDBACK_MS)
     },
-    [beginRound],
+    [beginRound, setRecords],
   )
 
   const resetToIdle = useCallback(() => {
@@ -190,11 +166,11 @@ export function useAcchiGame() {
     activeRoundRef.current = null
     resultsRef.current = []
     phaseRef.current = 'idle'
-    setState((current) => createIdleState(current.records))
+    setState(createIdleState())
   }, [clearTimers])
 
   return {
-    state,
+    state: { ...state, records },
     startGame,
     answer,
     resetToIdle,

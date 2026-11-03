@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vite-plus/test'
 import {
+  HANDS,
+  INSTRUCTIONS,
   getCorrectHand,
+  handLabel,
+  instructionLabel,
   pickRandom,
   randomDelayMs,
   summarizeResults,
@@ -9,21 +13,28 @@ import {
 
 describe('getCorrectHand', () => {
   it('returns the same hand for draw', () => {
-    expect(getCorrectHand('rock', 'draw')).toBe('rock')
-    expect(getCorrectHand('scissors', 'draw')).toBe('scissors')
-    expect(getCorrectHand('paper', 'draw')).toBe('paper')
+    expect(getCorrectHand(HANDS.ROCK, INSTRUCTIONS.DRAW)).toBe(HANDS.ROCK)
+    expect(getCorrectHand(HANDS.SCISSORS, INSTRUCTIONS.DRAW)).toBe(HANDS.SCISSORS)
+    expect(getCorrectHand(HANDS.PAPER, INSTRUCTIONS.DRAW)).toBe(HANDS.PAPER)
   })
 
   it('returns the winning hand for win', () => {
-    expect(getCorrectHand('rock', 'win')).toBe('paper')
-    expect(getCorrectHand('scissors', 'win')).toBe('rock')
-    expect(getCorrectHand('paper', 'win')).toBe('scissors')
+    expect(getCorrectHand(HANDS.ROCK, INSTRUCTIONS.WIN)).toBe(HANDS.PAPER)
+    expect(getCorrectHand(HANDS.SCISSORS, INSTRUCTIONS.WIN)).toBe(HANDS.ROCK)
+    expect(getCorrectHand(HANDS.PAPER, INSTRUCTIONS.WIN)).toBe(HANDS.SCISSORS)
   })
 
   it('returns the losing hand for lose', () => {
-    expect(getCorrectHand('rock', 'lose')).toBe('scissors')
-    expect(getCorrectHand('scissors', 'lose')).toBe('paper')
-    expect(getCorrectHand('paper', 'lose')).toBe('rock')
+    expect(getCorrectHand(HANDS.ROCK, INSTRUCTIONS.LOSE)).toBe(HANDS.SCISSORS)
+    expect(getCorrectHand(HANDS.SCISSORS, INSTRUCTIONS.LOSE)).toBe(HANDS.PAPER)
+    expect(getCorrectHand(HANDS.PAPER, INSTRUCTIONS.LOSE)).toBe(HANDS.ROCK)
+  })
+})
+
+describe('labels', () => {
+  it('returns Japanese labels for hands and instructions', () => {
+    expect(handLabel(HANDS.ROCK)).toBe('グー')
+    expect(instructionLabel(INSTRUCTIONS.WIN)).toBe('勝って')
   })
 })
 
@@ -60,16 +71,16 @@ describe('summarizeResults', () => {
   it('aggregates accuracy and average response time', () => {
     const results: RoundResult[] = [
       {
-        instruction: 'win',
-        systemHand: 'rock',
-        userHand: 'paper',
+        instruction: INSTRUCTIONS.WIN,
+        systemHand: HANDS.ROCK,
+        userHand: HANDS.PAPER,
         correct: true,
         responseMs: 200,
       },
       {
-        instruction: 'lose',
-        systemHand: 'rock',
-        userHand: 'rock',
+        instruction: INSTRUCTIONS.LOSE,
+        systemHand: HANDS.ROCK,
+        userHand: HANDS.ROCK,
         correct: false,
         responseMs: 400,
       },

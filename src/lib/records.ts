@@ -1,3 +1,5 @@
+import { atomWithStorage } from 'jotai/utils'
+import * as v from 'valibot'
 import { TOTAL_ROUNDS } from './reflex'
 
 export type SessionRecord = {
@@ -16,9 +18,21 @@ export type RecordsStore = {
 
 export const JANKEN_RECORDS_STORAGE_KEY = 'reflexes-janken-records'
 export const ACCHI_RECORDS_STORAGE_KEY = 'reflexes-acchi-records'
-/** @deprecated Prefer JANKEN_RECORDS_STORAGE_KEY */
-export const RECORDS_STORAGE_KEY = JANKEN_RECORDS_STORAGE_KEY
 const MAX_SESSIONS = 50
+
+const SessionRecordSchema = v.object({
+  accuracy: v.number(),
+  averageResponseMs: v.number(),
+  correctCount: v.number(),
+  totalRounds: v.number(),
+  playedAt: v.string(),
+})
+
+const LooseRecordsSchema = v.object({
+  sessions: v.optional(v.array(v.unknown())),
+  bestAccuracy: v.optional(v.number()),
+  bestAverageResponseMs: v.optional(v.nullable(v.number())),
+})
 
 export function createEmptyRecords(): RecordsStore {
   return {
@@ -28,54 +42,80 @@ export function createEmptyRecords(): RecordsStore {
   }
 }
 
-function isSessionRecord(value: unknown): value is SessionRecord {
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
-
-  const record = value as Record<string, unknown>
-  return (
-    typeof record.accuracy === 'number' &&
-    typeof record.averageResponseMs === 'number' &&
-    typeof record.correctCount === 'number' &&
-    typeof record.totalRounds === 'number' &&
-    typeof record.playedAt === 'string'
-  )
-}
-
 export function parseRecords(raw: string | null): RecordsStore {
   if (!raw) {
     return createEmptyRecords()
   }
 
   try {
-    const parsed: unknown = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) {
+    const json: unknown = JSON.parse(raw)
+    const loose = v.safeParse(LooseRecordsSchema, json)
+    if (!loose.success) {
       return createEmptyRecords()
     }
 
-    const data = parsed as Record<string, unknown>
-    const sessions = Array.isArray(data.sessions) ? data.sessions.filter(isSessionRecord) : []
+    const sessions = (loose.output.sessions ?? []).flatMap((session) => {
+      const parsed = v.safeParse(SessionRecordSchema, session)
+      return parsed.success ? [parsed.output] : []
+    })
 
     return {
       sessions,
-      bestAccuracy: typeof data.bestAccuracy === 'number' ? data.bestAccuracy : 0,
-      bestAverageResponseMs:
-        typeof data.bestAverageResponseMs === 'number' ? data.bestAverageResponseMs : null,
+      bestAccuracy: loose.output.bestAccuracy ?? 0,
+      bestAverageResponseMs: loose.output.bestAverageResponseMs ?? null,
     }
   } catch {
     return createEmptyRecords()
   }
 }
 
-export function loadRecords(
-  storage: Storage = localStorage,
-  key: string = JANKEN_RECORDS_STORAGE_KEY,
-): RecordsStore {
-  return parseRecords(storage.getItem(key))
+type RecordsStorage = {
+  getItem: (key: string, initialValue: RecordsStore) => RecordsStore
+  setItem: (key: string, value: RecordsStore) => void
+  removeItem: (key: string) => void
 }
 
-export function saveSession(
+function createRecordsStorage(): RecordsStorage {
+  return {
+    getItem(key, initialValue) {
+      if (typeof localStorage === 'undefined') {
+        return initialValue
+      }
+      return parseRecords(localStorage.getItem(key))
+    },
+    setItem(key, value) {
+      if (typeof localStorage === 'undefined') {
+        return
+      }
+      localStorage.setItem(key, JSON.stringify(value))
+    },
+    removeItem(key) {
+      if (typeof localStorage === 'undefined') {
+        return
+      }
+      localStorage.removeItem(key)
+    },
+  }
+}
+
+const recordsStorage = createRecordsStorage()
+
+export const jankenRecordsAtom = atomWithStorage(
+  JANKEN_RECORDS_STORAGE_KEY,
+  createEmptyRecords(),
+  recordsStorage,
+  { getOnInit: true },
+)
+
+export const acchiRecordsAtom = atomWithStorage(
+  ACCHI_RECORDS_STORAGE_KEY,
+  createEmptyRecords(),
+  recordsStorage,
+  { getOnInit: true },
+)
+
+export function appendSession(
+  current: RecordsStore,
   input: {
     accuracy: number
     averageResponseMs: number
@@ -83,10 +123,7 @@ export function saveSession(
     totalRounds?: number
     playedAt?: string
   },
-  storage: Storage = localStorage,
-  key: string = JANKEN_RECORDS_STORAGE_KEY,
 ): RecordsStore {
-  const current = loadRecords(storage, key)
   const session: SessionRecord = {
     accuracy: input.accuracy,
     averageResponseMs: input.averageResponseMs,
@@ -102,14 +139,11 @@ export function saveSession(
       ? session.averageResponseMs
       : Math.min(current.bestAverageResponseMs, session.averageResponseMs)
 
-  const next: RecordsStore = {
+  return {
     sessions,
     bestAccuracy,
     bestAverageResponseMs,
   }
-
-  storage.setItem(key, JSON.stringify(next))
-  return next
 }
 
 export function formatAccuracy(accuracy: number): string {

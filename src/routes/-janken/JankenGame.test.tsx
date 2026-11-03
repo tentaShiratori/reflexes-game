@@ -1,23 +1,8 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { JANKEN_RECORDS_STORAGE_KEY } from '#/lib/records'
+import { renderWithRouter } from '#/test/renderWithRouter'
 import { JankenGame } from './JankenGame'
-import { RECORDS_STORAGE_KEY } from '#/lib/records'
-
-vi.mock('@tanstack/react-router', () => ({
-  Link: ({
-    children,
-    to,
-    className,
-  }: {
-    children: React.ReactNode
-    to: string
-    className?: string
-  }) => (
-    <a href={to} className={className}>
-      {children}
-    </a>
-  ),
-}))
 
 afterEach(() => {
   cleanup()
@@ -31,24 +16,21 @@ beforeEach(() => {
 })
 
 describe('JankenGame', () => {
-  it('renders the brand and start controls on idle', () => {
-    render(<JankenGame />)
+  it('renders the brand and start controls on idle', async () => {
+    renderWithRouter(<JankenGame />, { path: '/janken' })
 
-    expect(screen.getByRole('heading', { name: '後だしじゃんけん' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '後だしじゃんけん' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'スタート' })).toBeInTheDocument()
     expect(screen.getByText('ベスト正答率')).toBeInTheDocument()
   })
 
   it('shows an instruction, reveals a system hand, and accepts an answer', async () => {
-    vi.spyOn(Math, 'random')
-      .mockReturnValueOnce(0) // instruction -> lose
-      .mockReturnValueOnce(0) // system hand -> rock
-      .mockReturnValueOnce(0) // delay -> 1000ms
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    renderWithRouter(<JankenGame />, { path: '/janken' })
+    const start = await screen.findByRole('button', { name: 'スタート' })
 
     vi.useFakeTimers()
-    render(<JankenGame />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'スタート' }))
+    fireEvent.click(start)
 
     expect(screen.getByTestId('instruction')).toHaveTextContent('負けて')
     expect(screen.getByTestId('waiting')).toBeInTheDocument()
@@ -64,9 +46,9 @@ describe('JankenGame', () => {
     expect(screen.getByTestId('feedback')).toHaveTextContent('正解')
   })
 
-  it('shows stored history on the idle screen', () => {
+  it('shows stored history on the idle screen', async () => {
     localStorage.setItem(
-      RECORDS_STORAGE_KEY,
+      JANKEN_RECORDS_STORAGE_KEY,
       JSON.stringify({
         sessions: [
           {
@@ -82,19 +64,20 @@ describe('JankenGame', () => {
       }),
     )
 
-    render(<JankenGame />)
+    renderWithRouter(<JankenGame />, { path: '/janken' })
 
-    expect(screen.getByText('直近の記録')).toBeInTheDocument()
+    expect(await screen.findByText('直近の記録')).toBeInTheDocument()
     expect(screen.getAllByText('80%').length).toBeGreaterThan(0)
     expect(screen.getAllByText('0.25秒').length).toBeGreaterThan(0)
   })
 
   it('saves results to localStorage after ten rounds', async () => {
-    vi.spyOn(Math, 'random').mockImplementation(() => 0)
-    vi.useFakeTimers()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    renderWithRouter(<JankenGame />, { path: '/janken' })
+    const start = await screen.findByRole('button', { name: 'スタート' })
 
-    render(<JankenGame />)
-    fireEvent.click(screen.getByRole('button', { name: 'スタート' }))
+    vi.useFakeTimers()
+    fireEvent.click(start)
 
     for (let round = 0; round < 10; round += 1) {
       await act(async () => {
@@ -108,6 +91,6 @@ describe('JankenGame', () => {
 
     expect(screen.getByRole('heading', { name: '結果' })).toBeInTheDocument()
     expect(screen.getByTestId('result-accuracy')).toHaveTextContent('100%')
-    expect(localStorage.getItem(RECORDS_STORAGE_KEY)).toContain('"accuracy":1')
+    expect(localStorage.getItem(JANKEN_RECORDS_STORAGE_KEY)).toContain('"accuracy":1')
   })
 })

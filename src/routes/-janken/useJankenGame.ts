@@ -1,7 +1,8 @@
+import { useAtom } from 'jotai'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  HANDS,
-  INSTRUCTIONS,
+  HAND_VALUES,
+  INSTRUCTION_VALUES,
   TOTAL_ROUNDS,
   getCorrectHand,
   pickRandom,
@@ -10,8 +11,8 @@ import {
   type Hand,
   type Instruction,
   type RoundResult,
-} from './janken'
-import { JANKEN_RECORDS_STORAGE_KEY, loadRecords, saveSession, type RecordsStore } from './records'
+} from '#/lib/janken'
+import { appendSession, jankenRecordsAtom, type RecordsStore } from '#/lib/records'
 
 type GamePhase = 'idle' | 'waiting' | 'answering' | 'feedback' | 'result'
 
@@ -22,20 +23,11 @@ type GameState = {
   systemHand: Hand | null
   lastResult: RoundResult | null
   results: RoundResult[]
-  records: RecordsStore
 }
 
 const FEEDBACK_MS = 700
 
-function emptyRecords(): RecordsStore {
-  return {
-    sessions: [],
-    bestAccuracy: 0,
-    bestAverageResponseMs: null,
-  }
-}
-
-function createIdleState(records: RecordsStore): GameState {
+function createIdleState(): GameState {
   return {
     phase: 'idle',
     round: 0,
@@ -43,18 +35,12 @@ function createIdleState(records: RecordsStore): GameState {
     systemHand: null,
     lastResult: null,
     results: [],
-    records,
   }
 }
 
 export function useJankenGame() {
-  const [state, setState] = useState<GameState>(() =>
-    createIdleState(
-      typeof window === 'undefined'
-        ? emptyRecords()
-        : loadRecords(localStorage, JANKEN_RECORDS_STORAGE_KEY),
-    ),
-  )
+  const [records, setRecords] = useAtom(jankenRecordsAtom)
+  const [state, setState] = useState<GameState>(createIdleState)
   const phaseRef = useRef<GamePhase>(state.phase)
   const resultsRef = useRef<RoundResult[]>([])
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -77,33 +63,26 @@ export function useJankenGame() {
     phaseRef.current = state.phase
   }, [state.phase])
 
-  useEffect(() => {
-    setState((current) => ({
-      ...current,
-      records: loadRecords(localStorage, JANKEN_RECORDS_STORAGE_KEY),
-    }))
-    return clearTimers
-  }, [clearTimers])
+  useEffect(() => clearTimers, [clearTimers])
 
   const beginRound = useCallback(
     (roundNumber: number, previousResults: RoundResult[]) => {
       clearTimers()
 
-      const instruction = pickRandom(INSTRUCTIONS)
-      const systemHand = pickRandom(HANDS)
+      const instruction = pickRandom(INSTRUCTION_VALUES)
+      const systemHand = pickRandom(HAND_VALUES)
       activeRoundRef.current = { instruction, systemHand }
       resultsRef.current = previousResults
       phaseRef.current = 'waiting'
 
-      setState((current) => ({
-        ...current,
+      setState({
         phase: 'waiting',
         round: roundNumber,
         instruction,
         systemHand: null,
         lastResult: null,
         results: previousResults,
-      }))
+      })
 
       const delay = randomDelayMs()
       revealTimerRef.current = setTimeout(() => {
@@ -154,15 +133,13 @@ export function useJankenGame() {
       feedbackTimerRef.current = setTimeout(() => {
         if (nextResults.length >= TOTAL_ROUNDS) {
           const summary = summarizeResults(nextResults)
-          const records = saveSession(
-            {
+          setRecords((current: RecordsStore) =>
+            appendSession(current, {
               accuracy: summary.accuracy,
               averageResponseMs: summary.averageResponseMs,
               correctCount: summary.correctCount,
               totalRounds: summary.totalRounds,
-            },
-            localStorage,
-            JANKEN_RECORDS_STORAGE_KEY,
+            }),
           )
 
           phaseRef.current = 'result'
@@ -171,7 +148,6 @@ export function useJankenGame() {
             phase: 'result',
             instruction: null,
             systemHand: null,
-            records,
           }))
           return
         }
@@ -179,7 +155,7 @@ export function useJankenGame() {
         beginRound(nextResults.length + 1, nextResults)
       }, FEEDBACK_MS)
     },
-    [beginRound],
+    [beginRound, setRecords],
   )
 
   const resetToIdle = useCallback(() => {
@@ -187,11 +163,11 @@ export function useJankenGame() {
     activeRoundRef.current = null
     resultsRef.current = []
     phaseRef.current = 'idle'
-    setState((current) => createIdleState(current.records))
+    setState(createIdleState())
   }, [clearTimers])
 
   return {
-    state,
+    state: { ...state, records },
     startGame,
     answer,
     resetToIdle,
