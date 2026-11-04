@@ -52,3 +52,4 @@ minimumReleaseAgeExclude:
   - vitest@5.1.0
   - workerd@1.20261103.1
   - wrangler@4.157.0
+  - '@cloudflare/vitest-plugin@1.5.1'
