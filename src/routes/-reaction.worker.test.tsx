@@ -9,5 +9,6 @@ describe('GET /reaction', () => {
     expect(html).toContain('反射神経テスト')
     expect(html).toContain('スタート')
     expect(html).toContain('後だしじゃんけんへ')
+    expect(html).toContain('あっち向いてホイへ')
   })
 })

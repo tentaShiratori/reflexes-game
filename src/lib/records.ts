@@ -3,6 +3,7 @@ import * as v from 'valibot'
 import { TOTAL_ROUNDS } from './janken'
 
 export const RECORDS_STORAGE_KEY = 'reflexes-janken-records'
+export const ACCHI_RECORDS_STORAGE_KEY = 'reflexes-acchi-records'
 const MAX_SESSIONS = 50
 
 const SessionRecordSchema = v.object({
@@ -95,29 +96,38 @@ export function appendSession(
   }
 }
 
+const recordsStorage = {
+  getItem(key: string, initialValue: RecordsStore) {
+    if (typeof localStorage === 'undefined') {
+      return initialValue
+    }
+    return parseRecords(localStorage.getItem(key))
+  },
+  setItem(key: string, value: RecordsStore) {
+    if (typeof localStorage === 'undefined') {
+      return
+    }
+    localStorage.setItem(key, JSON.stringify(value))
+  },
+  removeItem(key: string) {
+    if (typeof localStorage === 'undefined') {
+      return
+    }
+    localStorage.removeItem(key)
+  },
+}
+
 export const recordsAtom = atomWithStorage<RecordsStore>(
   RECORDS_STORAGE_KEY,
   createEmptyRecords(),
-  {
-    getItem(key, initialValue) {
-      if (typeof localStorage === 'undefined') {
-        return initialValue
-      }
-      return parseRecords(localStorage.getItem(key))
-    },
-    setItem(key, value) {
-      if (typeof localStorage === 'undefined') {
-        return
-      }
-      localStorage.setItem(key, JSON.stringify(value))
-    },
-    removeItem(key) {
-      if (typeof localStorage === 'undefined') {
-        return
-      }
-      localStorage.removeItem(key)
-    },
-  },
+  recordsStorage,
+  { getOnInit: true },
+)
+
+export const acchiRecordsAtom = atomWithStorage<RecordsStore>(
+  ACCHI_RECORDS_STORAGE_KEY,
+  createEmptyRecords(),
+  recordsStorage,
   { getOnInit: true },
 )
 
