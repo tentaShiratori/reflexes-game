@@ -1,8 +1,21 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { Provider, createStore } from 'jotai'
+import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { RECORDS_STORAGE_KEY } from '#/lib/records'
 import { JankenGame } from './JankenGame'
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    Link: ({ to, children, ...props }: { to: string; children: ReactNode }) => (
+      <a href={to} {...props}>
+        {children}
+      </a>
+    ),
+  }
+})
 
 function renderGame() {
   const store = createStore()
@@ -31,6 +44,8 @@ describe('JankenGame', () => {
     expect(screen.getByRole('heading', { name: '後だしじゃんけん' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'スタート' })).toBeInTheDocument()
     expect(screen.getByText('ベスト正答率')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '反射神経テストへ' })).toBeInTheDocument()
+    expect(screen.queryByTestId('response-time-chart')).not.toBeInTheDocument()
   })
 
   it('shows an instruction, reveals a system hand, and accepts an answer', async () => {
@@ -58,7 +73,7 @@ describe('JankenGame', () => {
     expect(screen.getByTestId('feedback')).toHaveTextContent('正解')
   })
 
-  it('shows stored history on the idle screen', () => {
+  it('shows a response-time chart instead of a history list on idle', () => {
     localStorage.setItem(
       RECORDS_STORAGE_KEY,
       JSON.stringify({
@@ -78,9 +93,8 @@ describe('JankenGame', () => {
 
     renderGame()
 
-    expect(screen.getByText('直近の記録')).toBeInTheDocument()
-    expect(screen.getAllByText('80%').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('0.25秒').length).toBeGreaterThan(0)
+    expect(screen.getByTestId('response-time-chart')).toBeInTheDocument()
+    expect(screen.queryByText('直近の記録')).not.toBeInTheDocument()
   })
 
   it('saves results to localStorage after ten rounds', async () => {

@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import styled, { keyframes } from 'styled-components'
 
 const riseIn = keyframes`
@@ -40,12 +41,25 @@ const Lead = styled.p`
   line-height: 1.7;
 `
 
+const NavLink = styled(Link)`
+  justify-self: start;
+  color: var(--accent-deep);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+
+  &:hover {
+    color: var(--ink);
+  }
+`
+
 export function GameBrand() {
   return (
     <Brand>
       <Kicker>Reflex Drill</Kicker>
       <Title>後だしじゃんけん</Title>
       <Lead>指示を見て、遅れて出る手に素早く合わせろ。</Lead>
+      <NavLink to="/reaction">反射神経テストへ</NavLink>
     </Brand>
   )
 }

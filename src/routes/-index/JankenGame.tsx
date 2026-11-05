@@ -1,7 +1,8 @@
 import styled, { keyframes } from 'styled-components'
+import { ResponseTimeChart } from '#/components/ResponseTimeChart'
+import { toChartSeries } from '#/lib/chartSeries'
 import { summarizeResults } from '#/lib/janken'
 import { GameBrand } from './GameBrand'
-import { HistoryPanel } from './HistoryPanel'
 import { IdlePanel } from './IdlePanel'
 import { PlayPanel } from './PlayPanel'
 import { ResultPanel } from './ResultPanel'
@@ -60,6 +61,7 @@ const Stage = styled.main`
 export function JankenGame() {
   const { state, records, startGame, answer, resetToIdle } = useJankenGame()
   const summary = summarizeResults(state.results)
+  const chartValues = toChartSeries(records.sessions.map((session) => session.averageResponseMs))
 
   return (
     <Shell>
@@ -68,7 +70,12 @@ export function JankenGame() {
       <Stage>
         <GameBrand />
 
-        {state.phase === 'idle' ? <IdlePanel records={records} onStart={startGame} /> : null}
+        {state.phase === 'idle' ? (
+          <>
+            <ResponseTimeChart values={chartValues} title="直近の平均反応時間" />
+            <IdlePanel records={records} onStart={startGame} />
+          </>
+        ) : null}
 
         {state.phase === 'waiting' || state.phase === 'answering' || state.phase === 'feedback' ? (
           <PlayPanel
@@ -90,10 +97,6 @@ export function JankenGame() {
             onRetry={startGame}
             onReset={resetToIdle}
           />
-        ) : null}
-
-        {records.sessions.length > 0 && state.phase === 'idle' ? (
-          <HistoryPanel sessions={records.sessions} />
         ) : null}
       </Stage>
     </Shell>

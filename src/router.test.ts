@@ -8,5 +8,6 @@ describe('getRouter', () => {
     expect(router).toBeDefined()
     expect(router.state).toBeDefined()
     expect(router.routesByPath['/']).toBeDefined()
+    expect(router.routesByPath['/reaction']).toBeDefined()
   })
 })
