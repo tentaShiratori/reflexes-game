@@ -6,3 +6,4 @@ node = "26.12.1"
 
 [env]
 MISE_PIN = true
+_.file = ".env"
