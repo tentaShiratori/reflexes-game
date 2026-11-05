@@ -41,8 +41,13 @@ const Lead = styled.p`
   line-height: 1.7;
 `
 
+const Nav = styled.nav`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+`
+
 const NavLink = styled(Link)`
-  justify-self: start;
   color: var(--accent-deep);
   font-weight: 600;
   text-decoration: underline;
@@ -58,8 +63,11 @@ export function GameBrand() {
     <Brand>
       <Kicker>Reflex Drill</Kicker>
       <Title>反射神経テスト</Title>
-      <Lead>赤が緑に変わったら、できるだけ早く画面を押せ。</Lead>
-      <NavLink to="/">後だしじゃんけんへ</NavLink>
+      <Lead>赤が緑に変わったら、できるだけ早く画面を押せ。5回の平均が1プレイの記録になる。</Lead>
+      <Nav aria-label="他のゲーム">
+        <NavLink to="/">後だしじゃんけんへ</NavLink>
+        <NavLink to="/acchi">あっち向いてホイへ</NavLink>
+      </Nav>
     </Brand>
   )
 }

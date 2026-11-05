@@ -1,37 +1,39 @@
 import { atomWithStorage } from 'jotai/utils'
 import * as v from 'valibot'
 
-export const REACTION_RECORDS_STORAGE_KEY = 'reflexes-reaction-records'
-const MAX_REACTION_MEASUREMENTS = 20
+/** Per-game averages (5 successful trials). Distinct from the old single-click key. */
+export const REACTION_RECORDS_STORAGE_KEY = 'reflexes-reaction-game-records'
+export const TRIALS_PER_GAME = 5
+const MAX_REACTION_GAMES = 20
 
-const MeasurementSchema = v.object({
-  ms: v.number(),
+const GameRecordSchema = v.object({
+  averageMs: v.number(),
   playedAt: v.string(),
 })
 
 const ReactionRecordsStoreSchema = v.object({
-  measurements: v.pipe(
+  games: v.pipe(
     v.array(v.unknown()),
     v.transform((items) =>
       items.flatMap((item) => {
-        const parsed = v.safeParse(MeasurementSchema, item)
+        const parsed = v.safeParse(GameRecordSchema, item)
         return parsed.success ? [parsed.output] : []
       }),
     ),
   ),
-  bestMs: v.optional(v.nullable(v.number()), null),
+  bestAverageMs: v.optional(v.nullable(v.number()), null),
 })
 
-export type ReactionMeasurement = v.InferOutput<typeof MeasurementSchema>
+export type ReactionGameRecord = v.InferOutput<typeof GameRecordSchema>
 export type ReactionRecordsStore = {
-  measurements: ReactionMeasurement[]
-  bestMs: number | null
+  games: ReactionGameRecord[]
+  bestAverageMs: number | null
 }
 
 export function createEmptyReactionRecords(): ReactionRecordsStore {
   return {
-    measurements: [],
-    bestMs: null,
+    games: [],
+    bestAverageMs: null,
   }
 }
 
@@ -47,32 +49,42 @@ export function parseReactionRecords(raw: string | null): ReactionRecordsStore {
     }
 
     return {
-      measurements: parsed.output.measurements.slice(0, MAX_REACTION_MEASUREMENTS),
-      bestMs: parsed.output.bestMs,
+      games: parsed.output.games.slice(0, MAX_REACTION_GAMES),
+      bestAverageMs: parsed.output.bestAverageMs,
     }
   } catch {
     return createEmptyReactionRecords()
   }
 }
 
-export function appendMeasurement(
+export function averageTrialMs(trialMs: readonly number[]): number {
+  if (trialMs.length === 0) {
+    return 0
+  }
+  return Math.round(trialMs.reduce((sum, ms) => sum + ms, 0) / trialMs.length)
+}
+
+export function appendGame(
   current: ReactionRecordsStore,
   input: {
-    ms: number
+    averageMs: number
     playedAt?: string
   },
 ): ReactionRecordsStore {
-  const measurement: ReactionMeasurement = {
-    ms: input.ms,
+  const game: ReactionGameRecord = {
+    averageMs: input.averageMs,
     playedAt: input.playedAt ?? new Date().toISOString(),
   }
 
-  const measurements = [measurement, ...current.measurements].slice(0, MAX_REACTION_MEASUREMENTS)
-  const bestMs = current.bestMs === null ? measurement.ms : Math.min(current.bestMs, measurement.ms)
+  const games = [game, ...current.games].slice(0, MAX_REACTION_GAMES)
+  const bestAverageMs =
+    current.bestAverageMs === null
+      ? game.averageMs
+      : Math.min(current.bestAverageMs, game.averageMs)
 
   return {
-    measurements,
-    bestMs,
+    games,
+    bestAverageMs,
   }
 }
 

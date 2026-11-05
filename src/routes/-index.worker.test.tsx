@@ -10,5 +10,7 @@ describe('GET /', () => {
     expect(html).toContain('後だしじゃんけん')
     expect(html).toContain('スタート')
     expect(html).toContain('Reflex Drill')
+    expect(html).toContain('反射神経テストへ')
+    expect(html).toContain('あっち向いてホイへ')
   })
 })

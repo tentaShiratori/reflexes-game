@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AcchiRouteImport } from './routes/acchi'
 import { Route as ReactionRouteImport } from './routes/reaction'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcchiRoute = AcchiRouteImport.update({
+  id: '/acchi',
+  path: '/acchi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReactionRoute = ReactionRouteImport.update({
@@ -25,27 +31,31 @@ const ReactionRoute = ReactionRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/acchi': typeof AcchiRoute
   '/reaction': typeof ReactionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/acchi': typeof AcchiRoute
   '/reaction': typeof ReactionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/acchi': typeof AcchiRoute
   '/reaction': typeof ReactionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/reaction'
+  fullPaths: '/' | '/acchi' | '/reaction'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/reaction'
-  id: '__root__' | '/' | '/reaction'
+  to: '/' | '/acchi' | '/reaction'
+  id: '__root__' | '/' | '/acchi' | '/reaction'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcchiRoute: typeof AcchiRoute
   ReactionRoute: typeof ReactionRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acchi': {
+      id: '/acchi'
+      path: '/acchi'
+      fullPath: '/acchi'
+      preLoaderRoute: typeof AcchiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reaction': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcchiRoute: AcchiRoute,
   ReactionRoute: ReactionRoute,
 }
 export const routeTree = rootRouteImport

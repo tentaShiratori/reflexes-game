@@ -45,6 +45,7 @@ describe('JankenGame', () => {
     expect(screen.getByRole('button', { name: 'スタート' })).toBeInTheDocument()
     expect(screen.getByText('ベスト正答率')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '反射神経テストへ' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'あっち向いてホイへ' })).toBeInTheDocument()
     expect(screen.queryByTestId('response-time-chart')).not.toBeInTheDocument()
   })
 

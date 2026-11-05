@@ -1,7 +1,7 @@
 import styled, { keyframes } from 'styled-components'
 import { PrimaryButton } from '#/components/PrimaryButton'
 import { RecordGrid } from '#/components/RecordGrid'
-import { formatReactionMs, type ReactionRecordsStore } from '#/lib/reactionRecords'
+import { TRIALS_PER_GAME, formatReactionMs, type ReactionRecordsStore } from '#/lib/reactionRecords'
 
 const riseIn = keyframes`
   from {
@@ -53,18 +53,19 @@ export function IdlePanel({
       <SrOnly id="reaction-start-heading">スタート</SrOnly>
       <Copy>
         スタート後は赤い待ち画面。1〜3秒で緑に変わったらすぐクリック。赤のうちに押すと無効でやり直し。
+        成功{TRIALS_PER_GAME}回の平均が1プレイの記録になる。
       </Copy>
 
       <RecordGrid
         items={[
           {
-            label: 'ベストタイム',
-            value: records.bestMs === null ? '—' : formatReactionMs(records.bestMs),
+            label: 'ベスト平均',
+            value: records.bestAverageMs === null ? '—' : formatReactionMs(records.bestAverageMs),
             valueTestId: 'reaction-best-ms',
           },
           {
-            label: '計測回数',
-            value: records.measurements.length,
+            label: 'プレイ回数',
+            value: records.games.length,
           },
         ]}
       />

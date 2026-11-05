@@ -41,8 +41,13 @@ const Lead = styled.p`
   line-height: 1.7;
 `
 
+const Nav = styled.nav`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+`
+
 const NavLink = styled(Link)`
-  justify-self: start;
   color: var(--accent-deep);
   font-weight: 600;
   text-decoration: underline;
@@ -59,7 +64,10 @@ export function GameBrand() {
       <Kicker>Reflex Drill</Kicker>
       <Title>後だしじゃんけん</Title>
       <Lead>指示を見て、遅れて出る手に素早く合わせろ。</Lead>
-      <NavLink to="/reaction">反射神経テストへ</NavLink>
+      <Nav aria-label="他のゲーム">
+        <NavLink to="/reaction">反射神経テストへ</NavLink>
+        <NavLink to="/acchi">あっち向いてホイへ</NavLink>
+      </Nav>
     </Brand>
   )
 }

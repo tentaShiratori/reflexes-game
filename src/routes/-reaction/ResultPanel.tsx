@@ -36,6 +36,27 @@ const Copy = styled.p`
   line-height: 1.7;
 `
 
+const TrialList = styled.ol`
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+`
+
+const TrialItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+
+  &:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+`
+
 const ButtonRow = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -44,13 +65,15 @@ const ButtonRow = styled.div`
 `
 
 export function ResultPanel({
-  ms,
-  bestMs,
+  trialMs,
+  averageMs,
+  bestAverageMs,
   onRetry,
   onReset,
 }: {
-  ms: number
-  bestMs: number | null
+  trialMs: readonly number[]
+  averageMs: number
+  bestAverageMs: number | null
   onRetry: () => void
   onReset: () => void
 }) {
@@ -60,17 +83,25 @@ export function ResultPanel({
       <RecordGrid
         items={[
           {
-            label: '反応時間',
-            value: formatReactionMs(ms),
+            label: '平均反応時間',
+            value: formatReactionMs(averageMs),
             valueTestId: 'reaction-result-ms',
           },
           {
-            label: 'ベストタイム',
-            value: bestMs === null ? '—' : formatReactionMs(bestMs),
+            label: 'ベスト平均',
+            value: bestAverageMs === null ? '—' : formatReactionMs(bestAverageMs),
           },
         ]}
       />
-      <Copy>成功した計測だけをブラウザの localStorage に保存しました。</Copy>
+      <TrialList data-testid="reaction-trial-list" aria-label="各回の反応時間">
+        {trialMs.map((ms, index) => (
+          <TrialItem key={`${index}-${ms}`}>
+            <span>{index + 1}回目</span>
+            <span>{formatReactionMs(ms)}</span>
+          </TrialItem>
+        ))}
+      </TrialList>
+      <Copy>5回の平均をブラウザの localStorage に保存しました。</Copy>
       <ButtonRow>
         <PrimaryButton type="button" onClick={onRetry}>
           もう一度
