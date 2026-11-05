@@ -1,6 +1,7 @@
 import styled, { keyframes } from 'styled-components'
 import { ResponseTimeChart } from '#/components/ResponseTimeChart'
 import { toChartSeries } from '#/lib/chartSeries'
+import { TRIALS_PER_GAME } from '#/lib/reactionRecords'
 import { GameBrand } from './GameBrand'
 import { IdlePanel } from './IdlePanel'
 import { PlaySurface } from './PlaySurface'
@@ -59,7 +60,8 @@ const Stage = styled.main`
 
 export function ReactionGame() {
   const { state, records, startGame, handleSurfaceClick, retry, resetToIdle } = useReactionGame()
-  const chartValues = toChartSeries(records.measurements.map((item) => item.ms))
+  const chartValues = toChartSeries(records.games.map((game) => game.averageMs))
+  const currentTrial = Math.min(state.trialMs.length + 1, TRIALS_PER_GAME)
 
   return (
     <Shell>
@@ -70,19 +72,26 @@ export function ReactionGame() {
 
         {state.phase === 'idle' ? (
           <>
-            <ResponseTimeChart values={chartValues} title="直近の反応時間" />
+            <ResponseTimeChart values={chartValues} title="直近の平均反応時間" />
             <IdlePanel records={records} onStart={startGame} />
           </>
         ) : null}
 
         {state.phase === 'waiting' || state.phase === 'ready' ? (
-          <PlaySurface phase={state.phase} tooEarly={state.tooEarly} onClick={handleSurfaceClick} />
+          <PlaySurface
+            phase={state.phase}
+            tooEarly={state.tooEarly}
+            trial={currentTrial}
+            totalTrials={TRIALS_PER_GAME}
+            onClick={handleSurfaceClick}
+          />
         ) : null}
 
-        {state.phase === 'result' && state.lastMs !== null ? (
+        {state.phase === 'result' && state.averageMs !== null ? (
           <ResultPanel
-            ms={state.lastMs}
-            bestMs={records.bestMs}
+            trialMs={state.trialMs}
+            averageMs={state.averageMs}
+            bestAverageMs={records.bestAverageMs}
             onRetry={retry}
             onReset={resetToIdle}
           />

@@ -47,6 +47,13 @@ const Surface = styled.button<{ $tone: 'waiting' | 'ready' }>`
   }
 `
 
+const Progress = styled.p`
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  opacity: 0.92;
+`
+
 const Prompt = styled.p`
   margin: 0;
   font-family: var(--font-display);
@@ -64,10 +71,14 @@ const Hint = styled.p`
 export function PlaySurface({
   phase,
   tooEarly,
+  trial,
+  totalTrials,
   onClick,
 }: {
   phase: Extract<ReactionPhase, 'waiting' | 'ready'>
   tooEarly: boolean
+  trial: number
+  totalTrials: number
   onClick: () => void
 }) {
   const waiting = phase === 'waiting'
@@ -80,6 +91,9 @@ export function PlaySurface({
       data-testid={waiting ? 'reaction-waiting' : 'reaction-ready'}
       aria-live="polite"
     >
+      <Progress data-testid="reaction-trial-progress">
+        {trial} / {totalTrials}
+      </Progress>
       <Prompt>{waiting ? '待て' : '今すぐ'}</Prompt>
       <Hint>
         {waiting
