@@ -5,8 +5,8 @@ import { Provider as JotaiProvider } from 'jotai'
 
 import appCss from '../styles.css?url'
 
-export function rootHead() {
-  return {
+export const Route = createRootRoute({
+  head: () => ({
     meta: [
       {
         charSet: 'utf-8',
@@ -23,21 +23,17 @@ export function rootHead() {
         content: '指示に合わせて後出しの手を素早く選ぶ、反射神経トレーニングゲーム。',
       },
     ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-    ],
-  }
-}
-
-export const Route = createRootRoute({
-  head: rootHead,
+    links: appCss ? [{ rel: 'stylesheet' as const, href: appCss }] : [],
+  }),
   shellComponent: RootDocument,
+  notFoundComponent: NotFound,
 })
 
-export function RootDocument({ children }: { children: React.ReactNode }) {
+function NotFound() {
+  return <>見つかりません。</>
+}
+
+function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
       <head>
